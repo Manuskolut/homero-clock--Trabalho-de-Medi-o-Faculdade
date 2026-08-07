@@ -69,10 +69,10 @@ export default async function PecasCadastradasPage() {
                         <LinkButton href={`/pecas/${peca.id}/etiqueta`} variant="ghost">
                           Reimprimir etiqueta
                         </LinkButton>
-                        {peca.status === "VENDIDA" ? (
+                        {peca._count.eventos > 0 ? (
                           <span
                             className="text-xs text-gray-light"
-                            title="Peças já vendidas não podem ser excluídas — use reativação se aplicável."
+                            title="Peças já vendidas em algum momento (mesmo reativadas depois) não podem ser excluídas."
                           >
                             Não pode excluir
                           </span>

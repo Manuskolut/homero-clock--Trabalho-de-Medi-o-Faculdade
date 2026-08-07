@@ -272,22 +272,32 @@ export async function reativarPeca(id: string, lojaIdParaAdmin?: string) {
   revalidatePath("/pecas/vendidas");
 }
 
-// Exclusão de peça cadastrada por engano: só permitida antes de qualquer
-// venda (nunca em peças VENDIDA — essas só voltam via reativação, dentro do
-// prazo de 7 dias). Hard delete mesmo: peça nunca vendida não tem histórico
-// de venda a preservar (diferente de VENDIDA, que nunca é excluída do banco).
+// Exclusão de peça cadastrada por engano: só permitida se a peça NUNCA foi
+// vendida — não basta olhar o status atual, porque uma peça vendida e depois
+// reativada volta para DISPONIVEL mas já tem histórico em PecaEvento (e a FK
+// PecaEvento->Peca é ON DELETE RESTRICT, então o delete falharia mesmo assim).
+// Hard delete mesmo: peça sem nenhum evento não tem histórico de venda a
+// preservar (diferente de peça já vendida alguma vez, que nunca é excluída).
 export async function excluirPeca(id: string) {
   const session = await verifySession();
   if (!podeCadastrarPecas(session)) {
     throw new Error("Ação restrita à loja Mueller.");
   }
 
-  const atual = await prisma.peca.findUnique({ where: { id } });
+  const atual = await prisma.peca.findUnique({
+    where: { id },
+    include: { _count: { select: { eventos: true } } },
+  });
   if (!atual) {
     throw new Error("Peça não encontrada.");
   }
   if (atual.status === "VENDIDA") {
     throw new Error("Não é possível excluir uma peça que já foi vendida.");
+  }
+  if (atual._count.eventos > 0) {
+    throw new Error(
+      "Não é possível excluir: esta peça já foi vendida em algum momento (e reativada depois)."
+    );
   }
 
   await prisma.peca.delete({ where: { id } });
@@ -306,7 +316,11 @@ export async function listarPecasCadastradas() {
   }
 
   return prisma.peca.findMany({
-    include: { lojaDestino: true, lojaVenda: true },
+    include: {
+      lojaDestino: true,
+      lojaVenda: true,
+      _count: { select: { eventos: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 }
