@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/button";
 import { PecaStatusBadge } from "@/components/ui/badge";
 import { LojaBadge } from "@/components/loja-badge";
+import { ExcluirPecaButton } from "@/components/excluir-peca-button";
 import { BackButton } from "@/components/ui/back-button";
 import { formatarData, formatarMoeda } from "@/lib/format";
 import { requireMuellerOuAdminPagina } from "@/lib/dal";
@@ -64,9 +65,21 @@ export default async function PecasCadastradasPage() {
                       <PecaStatusBadge status={peca.status} />
                     </td>
                     <td className="px-5 py-3">
-                      <LinkButton href={`/pecas/${peca.id}/etiqueta`} variant="ghost">
-                        Reimprimir etiqueta
-                      </LinkButton>
+                      <div className="flex items-center gap-2">
+                        <LinkButton href={`/pecas/${peca.id}/etiqueta`} variant="ghost">
+                          Reimprimir etiqueta
+                        </LinkButton>
+                        {peca.status === "VENDIDA" ? (
+                          <span
+                            className="text-xs text-gray-light"
+                            title="Peças já vendidas não podem ser excluídas — use reativação se aplicável."
+                          >
+                            Não pode excluir
+                          </span>
+                        ) : (
+                          <ExcluirPecaButton id={peca.id} nome={peca.nome} />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

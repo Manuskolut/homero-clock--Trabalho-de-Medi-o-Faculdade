@@ -272,6 +272,31 @@ export async function reativarPeca(id: string, lojaIdParaAdmin?: string) {
   revalidatePath("/pecas/vendidas");
 }
 
+// Exclusão de peça cadastrada por engano: só permitida antes de qualquer
+// venda (nunca em peças VENDIDA — essas só voltam via reativação, dentro do
+// prazo de 7 dias). Hard delete mesmo: peça nunca vendida não tem histórico
+// de venda a preservar (diferente de VENDIDA, que nunca é excluída do banco).
+export async function excluirPeca(id: string) {
+  const session = await verifySession();
+  if (!podeCadastrarPecas(session)) {
+    throw new Error("Ação restrita à loja Mueller.");
+  }
+
+  const atual = await prisma.peca.findUnique({ where: { id } });
+  if (!atual) {
+    throw new Error("Peça não encontrada.");
+  }
+  if (atual.status === "VENDIDA") {
+    throw new Error("Não é possível excluir uma peça que já foi vendida.");
+  }
+
+  await prisma.peca.delete({ where: { id } });
+
+  revalidatePath("/pecas");
+  revalidatePath("/pecas/cadastradas");
+  revalidatePath("/pecas/confirmar");
+}
+
 // Tela exclusiva da Mueller: como só ela cadastra peças, isto é o histórico
 // completo de tudo que já foi cadastrado, qualquer status ou destino.
 export async function listarPecasCadastradas() {
