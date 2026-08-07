@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  --color-gold: #b8952e;
+  --color-gold-light: #d2c48e;
+  --color-cream: #ecebe3;
+  --color-gray: #838486;
+  --color-gray-light: #9c9c9c;
+  --color-ink: #1c1b18;
+
+  --background: var(--color-cream);
+  --foreground: var(--color-ink);
+}
+
+@theme inline {
+  --color-gold: var(--color-gold);
+  --color-gold-light: var(--color-gold-light);
+  --color-cream: var(--color-cream);
+  --color-gray: var(--color-gray);
+  --color-gray-light: var(--color-gray-light);
+  --color-ink: var(--color-ink);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-sans: var(--font-inter);
+  --font-serif: var(--font-playfair);
+  --font-heading: var(--font-antonio);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Efeito "dourado metálico brilhante" — usado com moderação apenas no botão
+   principal de ação. Gradiente entre dourado escuro/principal/claro com um
+   realce que se desloca lentamente, simulando reflexo de luz em metal. A
+   marca "Homero Clock", o ícone do relógio e os títulos de página usam
+   dourado sólido (--color-gold), sem gradiente nem animação. Este gradiente
+   do botão "Nova Ordem" é intencionalmente independente da variável de tema. */
+.btn-gold-shine {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-image: linear-gradient(
+    135deg,
+    #9c7a24 0%,
+    #d4af37 45%,
+    #d2c48e 58%,
+    #d4af37 75%,
+    #9c7a24 100%
+  );
+}
+
+.btn-gold-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -75%;
+  width: 50%;
+  background: linear-gradient(
+    120deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0) 30%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(255, 255, 255, 0) 70%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.85s ease;
+  pointer-events: none;
+}
+
+.btn-gold-shine:hover::after,
+.btn-gold-shine:focus-visible::after {
+  left: 125%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-gold-shine::after {
+    transition: none;
+    display: none;
+  }
+}

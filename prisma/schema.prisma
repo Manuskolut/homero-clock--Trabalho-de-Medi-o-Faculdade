@@ -1,0 +1,191 @@
+// Schema do banco de dados - Homero Clock Relojóias
+// SQLite local (arquivo prisma/dev.db)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Loja {
+  id        String   @id // slug fixo: "mueller" | "jockey" | "patio-batel" | "legado"
+  nome      String   @unique
+  ativa     Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  usuarios Usuario[]
+  clientes Cliente[]
+  ordens   Ordem[]
+
+  pecasDestino  Peca[]      @relation("PecasDestino")
+  pecasVendidas Peca[]      @relation("PecasVenda")
+  pecasEventos  PecaEvento[]
+}
+
+enum TipoUsuario {
+  LOJA
+  ADMIN
+}
+
+model Usuario {
+  id        String      @id @default(cuid())
+  email     String      @unique
+  nome      String
+  senhaHash String
+  tipo      TipoUsuario
+  // obrigatório quando tipo=LOJA, null quando tipo=ADMIN (validado nas actions, não no schema)
+  lojaId    String?
+  loja      Loja?       @relation(fields: [lojaId], references: [id])
+  ativo     Boolean     @default(true)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@index([lojaId])
+}
+
+model Cliente {
+  id        String   @id @default(cuid())
+  nome      String
+  telefone  String
+  email     String?
+  lojaId    String
+  loja      Loja     @relation(fields: [lojaId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ordens Ordem[]
+
+  @@index([lojaId, nome])
+  @@index([lojaId, telefone])
+}
+
+enum TipoItem {
+  RELOGIO
+  JOIA
+}
+
+enum StatusOrdem {
+  RECEBIDO
+  EM_ANALISE
+  EM_CONSERTO
+  PRONTO_RETIRADA
+  SEM_CONSERTO
+  ENTREGUE
+}
+
+model Ordem {
+  id        String @id @default(cuid())
+  numeroOS  Int
+
+  lojaId String
+  loja   Loja   @relation(fields: [lojaId], references: [id])
+
+  clienteId String
+  cliente   Cliente @relation(fields: [clienteId], references: [id])
+
+  tipoItem         TipoItem
+  descricaoItem    String
+  dataEntrada      DateTime
+  dataPrevista     DateTime? // opcional no cadastro; exigido ao dar baixa
+  valorOrcado      Float? // opcional no cadastro; exigido ao dar baixa
+  observacoes      String?
+
+  // Específico do fluxo Relógio — lista de até 6 relógios, cada um com seus
+  // próprios dados técnicos (modelo, tipo, pulseira, estado das peças na entrada)
+  relogiosDetalhes Json?
+  oficina          String? // oficina destinada (ex: Leandro, Mueller, Jockey, Jorge)
+
+  // Específico do fluxo Joia — lista de peças, cada uma com sua própria
+  // descrição, tipo(s) de conserto, tamanho do aro e peso (quando aplicável)
+  pecasJoia         Json?
+
+  status              StatusOrdem @default(RECEBIDO)
+  // Momento em que o status virou "Sem conserto" — usado só para o KPI
+  // mensal, já que dataRetirada fica nulo enquanto a ordem está aberta
+  // (Sem conserto deixou de ser status final; a baixa formal é etapa à parte).
+  dataMarcadoSemConserto DateTime?
+  dataRetirada        DateTime?
+  observacaoRetirada  String?
+  cpfRetirada         String? // só dígitos (11), normalizado no Zod — quem retirou o item
+  nomeRetirada        String? // nome de quem retirou o item
+  emailRetirada       String? // e-mail informado na baixa — independente de Cliente.email
+  custoOurives        Float? // custo pago ao ourives (joia) — registrado ao dar baixa
+
+  deletedAt DateTime? // soft delete — só Admin popula este campo
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([lojaId, numeroOS])
+  @@index([lojaId, status])
+  @@index([lojaId, dataPrevista])
+  @@index([lojaId, dataRetirada])
+  @@index([lojaId, dataEntrada])
+  @@index([clienteId])
+  @@index([numeroOS])
+  @@index([tipoItem])
+  @@index([deletedAt])
+}
+
+enum StatusPeca {
+  AGUARDANDO_CONFIRMACAO
+  DISPONIVEL
+  VENDIDA
+}
+
+enum TipoEventoPeca {
+  VENDA
+  REATIVACAO
+}
+
+model Peca {
+  id           String @id @default(cuid())
+  nome         String
+  descricao    String?
+  preco        Float
+  // Sequencial global (não por loja — qualquer loja pode dar baixa em
+  // qualquer peça), zero-padded, gerado atomicamente (mesmo princípio do
+  // numeroOS: transação + retry em colisão). Guardado já formatado porque a
+  // leitura é feita por leitor USB (modo teclado) que digita o texto exato.
+  codigoBarras String @unique
+
+  lojaDestinoId String
+  lojaDestino   Loja   @relation("PecasDestino", fields: [lojaDestinoId], references: [id])
+
+  status StatusPeca
+
+  // Só preenchido quando a loja destino confirma o recebimento (Jockey ou
+  // Patio Batel) — peças com destino Mueller nunca passam por esta etapa.
+  dataConfirmacao DateTime?
+
+  dataVenda   DateTime?
+  lojaVendaId String?
+  lojaVenda   Loja?   @relation("PecasVenda", fields: [lojaVendaId], references: [id])
+
+  // Histórico completo de vendas/reativações desta peça — nunca sobrescrito,
+  // preservado mesmo após reativar (ver regra de negócio 6: nunca excluir).
+  eventos PecaEvento[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([lojaDestinoId, status])
+  @@index([status])
+  @@index([lojaVendaId, status])
+}
+
+model PecaEvento {
+  id     String         @id @default(cuid())
+  pecaId String
+  peca   Peca           @relation(fields: [pecaId], references: [id])
+  tipo   TipoEventoPeca
+  lojaId String
+  loja   Loja           @relation(fields: [lojaId], references: [id])
+  data   DateTime       @default(now())
+
+  @@index([pecaId])
+}
