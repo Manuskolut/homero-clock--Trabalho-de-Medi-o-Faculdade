@@ -142,6 +142,12 @@ enum TipoEventoPeca {
   REATIVACAO
 }
 
+enum CategoriaPeca {
+  JOIA
+  FOLHEADO
+  RELOGIO
+}
+
 model Peca {
   id           String @id @default(cuid())
   nome         String
@@ -152,6 +158,18 @@ model Peca {
   // numeroOS: transação + retry em colisão). Guardado já formatado porque a
   // leitura é feita por leitor USB (modo teclado) que digita o texto exato.
   codigoBarras String @unique
+
+  categoria CategoriaPeca
+  // Texto livre (ex: "3g"), mesmo padrão do peso de peça de joia nas OS —
+  // só preenchido quando categoria é JOIA ou FOLHEADO.
+  peso      String?
+  // Só dígitos (validado no Zod), mas guardado como texto — só preenchido
+  // quando categoria é RELOGIO. String (não Int) de propósito: permite busca
+  // por trecho ("contains") e preserva zeros à esquerda.
+  referencia String?
+  // Caminho público do arquivo (ex: "/uploads/pecas/<uuid>.jpg") — a imagem
+  // em si fica em public/uploads/pecas, fora do SQLite.
+  fotoUrl   String?
 
   lojaDestinoId String
   lojaDestino   Loja   @relation("PecasDestino", fields: [lojaDestinoId], references: [id])
@@ -176,6 +194,7 @@ model Peca {
   @@index([lojaDestinoId, status])
   @@index([status])
   @@index([lojaVendaId, status])
+  @@index([categoria])
 }
 
 model PecaEvento {

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Playfair_Display, Antonio } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
+import { SiteFooter } from "@/components/site-footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -37,12 +38,10 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <Header />
-        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col">
           {children}
         </main>
-        <footer className="border-t border-gold-light/40 py-4 text-center text-xs text-gray">
-          Homero Clock Relojóias — Sistema interno de gestão
-        </footer>
+        <SiteFooter />
       </body>
     </html>
   );

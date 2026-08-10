@@ -1,6 +1,7 @@
 import {
   STATUS_ORDEM_OPTIONS,
   STATUS_PECA_OPTIONS,
+  CATEGORIA_PECA_OPTIONS,
   TIPO_ITEM_OPTIONS,
   TIPOS_CONSERTO_JOIA_OPTIONS,
   TIPO_RELOGIO_OPTIONS,
@@ -245,6 +246,10 @@ export function estaAtrasada(
 
 export function labelStatusPeca(status: string): string {
   return STATUS_PECA_OPTIONS.find((s) => s.value === status)?.label ?? status;
+}
+
+export function labelCategoriaPeca(categoria: string): string {
+  return CATEGORIA_PECA_OPTIONS.find((c) => c.value === categoria)?.label ?? categoria;
 }
 
 export const STATUS_PECA_COLOR_HEX: Record<string, string> = {

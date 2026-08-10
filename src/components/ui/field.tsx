@@ -81,6 +81,36 @@ export function TextAreaField({
   );
 }
 
+export function FileField({
+  label,
+  name,
+  error,
+  required,
+  className,
+  ...props
+}: InputHTMLAttributes<HTMLInputElement> & {
+  label: string;
+  name: string;
+  error?: string;
+}) {
+  return (
+    <FieldWrapper label={label} htmlFor={name} error={error} required={required}>
+      <input
+        id={name}
+        name={name}
+        type="file"
+        className={clsx(
+          inputBase,
+          "file:mr-3 file:rounded-md file:border-0 file:bg-gold file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white",
+          error && "border-red-400",
+          className
+        )}
+        {...props}
+      />
+    </FieldWrapper>
+  );
+}
+
 export function SelectField({
   label,
   name,

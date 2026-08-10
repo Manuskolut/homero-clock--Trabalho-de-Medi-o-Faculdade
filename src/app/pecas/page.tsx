@@ -5,23 +5,32 @@ import { Card } from "@/components/ui/card";
 import { PecaStatusBadge } from "@/components/ui/badge";
 import { LojaBadge } from "@/components/loja-badge";
 import { LojaFiltro } from "@/components/loja-filtro";
+import { CategoriaFiltro } from "@/components/categoria-filtro";
+import { BuscaPecaFiltro } from "@/components/busca-peca-filtro";
+import { PecaCard } from "@/components/peca-card";
 import { BackButton } from "@/components/ui/back-button";
-import { formatarData, formatarMoeda } from "@/lib/format";
+import { formatarData, formatarMoeda, labelCategoriaPeca } from "@/lib/format";
 import { getOptionalSession, podeCadastrarPecas, podeConfirmarRecebimentoPecas } from "@/lib/dal";
+import type { CategoriaPeca } from "@prisma/client";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function PecasPage({
   searchParams,
 }: {
-  searchParams: Promise<{ loja?: string }>;
+  searchParams: Promise<{ loja?: string; categoria?: string; busca?: string }>;
 }) {
   const sp = await searchParams;
   const session = await getOptionalSession();
   const isAdmin = session?.tipo === "ADMIN";
 
   const [pecas, lojas] = await Promise.all([
-    listarPecasFila(sp.loja),
+    listarPecasFila({
+      lojaId: sp.loja,
+      categoria: sp.categoria as CategoriaPeca | undefined,
+      busca: sp.busca,
+    }),
     isAdmin ? listarLojasSelecionaveis() : Promise.resolve(undefined),
   ]);
 
@@ -43,6 +52,8 @@ export default async function PecasPage({
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-3">
+          <BuscaPecaFiltro />
+          <CategoriaFiltro />
           {lojas && <LojaFiltro lojas={lojas} />}
           {mostrarCadastro && <LinkButton href="/pecas/nova">+ Nova Peça</LinkButton>}
         </div>
@@ -70,14 +81,28 @@ export default async function PecasPage({
       <Card className="overflow-hidden">
         {pecas.length === 0 ? (
           <p className="text-sm text-gray-light py-12 text-center">
-            Nenhuma peça disponível no momento.
+            {sp.busca
+              ? "Nenhuma peça encontrada para essa busca."
+              : "Nenhuma peça disponível no momento."}
           </p>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="md:hidden flex flex-col divide-y divide-gold-light/20">
+            {pecas.map((peca) => (
+              <PecaCard
+                key={peca.id}
+                peca={peca}
+                loja={isAdmin ? peca.lojaDestino : undefined}
+                extra={<span>Cadastrada em {formatarData(peca.createdAt)}</span>}
+              />
+            ))}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gold-light/40 text-left text-xs uppercase tracking-wide text-gray">
                   <th className="px-5 py-3 font-medium">Nome</th>
+                  <th className="px-5 py-3 font-medium">Categoria</th>
                   <th className="px-5 py-3 font-medium">Código de barras</th>
                   <th className="px-5 py-3 font-medium">Preço</th>
                   <th className="px-5 py-3 font-medium">Cadastrada em</th>
@@ -88,7 +113,12 @@ export default async function PecasPage({
               <tbody className="divide-y divide-gold-light/20">
                 {pecas.map((peca) => (
                   <tr key={peca.id} className="hover:bg-gold-light/10 transition-colors">
-                    <td className="px-5 py-3 font-medium text-ink">{peca.nome}</td>
+                    <td className="px-5 py-3 font-medium">
+                      <Link href={`/pecas/${peca.id}`} className="text-ink hover:text-gold">
+                        {peca.nome}
+                      </Link>
+                    </td>
+                    <td className="px-5 py-3 text-gray">{labelCategoriaPeca(peca.categoria)}</td>
                     <td className="px-5 py-3 font-mono text-gray">{peca.codigoBarras}</td>
                     <td className="px-5 py-3 text-gray whitespace-nowrap">
                       {formatarMoeda(peca.preco)}
@@ -109,6 +139,7 @@ export default async function PecasPage({
               </tbody>
             </table>
           </div>
+          </>
         )}
       </Card>
     </div>

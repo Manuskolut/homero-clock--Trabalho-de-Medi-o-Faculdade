@@ -2,9 +2,10 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { darBaixaPeca } from "@/lib/actions/pecas";
+import { buscarPecaParaVenda, darBaixaPeca, type PecaParaVenda } from "@/lib/actions/pecas";
 import { formatarMoeda } from "@/lib/format";
 import { SelectField } from "@/components/ui/field";
+import { Button } from "@/components/ui/button";
 import { clsx } from "clsx";
 
 type LojaOption = { id: string; nome: string };
@@ -36,9 +37,15 @@ export function DarBaixaScanner({
   const [lojaId, setLojaId] = useState("");
   const [isPending, startTransition] = useTransition();
   const [historico, setHistorico] = useState<(ItemVendido | ItemErro)[]>([]);
+  const [pecaPendente, setPecaPendente] = useState<PecaParaVenda | null>(null);
   const contador = useRef(0);
 
   const bloqueadoPorLoja = isAdmin && !lojaId;
+
+  function registrarErro(mensagem: string) {
+    contador.current += 1;
+    setHistorico((h) => [{ key: contador.current, ok: false, mensagem }, ...h]);
+  }
 
   function processarScan() {
     const valor = codigo.trim();
@@ -46,13 +53,29 @@ export function DarBaixaScanner({
     if (!valor || bloqueadoPorLoja) return;
 
     startTransition(async () => {
-      const resultado = await darBaixaPeca(valor, isAdmin ? lojaId : undefined);
+      const resultado = await buscarPecaParaVenda(valor);
+      if (resultado.ok && resultado.peca) {
+        // Lê outra peça enquanto uma confirmação estava pendente: a
+        // anterior é descartada sem ter sido vendida.
+        setPecaPendente(resultado.peca);
+      } else {
+        setPecaPendente(null);
+        registrarErro(resultado.error ?? "Erro ao buscar a peça.");
+      }
+      inputRef.current?.focus();
+    });
+  }
+
+  function confirmarVenda() {
+    if (!pecaPendente) return;
+    const peca = pecaPendente;
+
+    startTransition(async () => {
+      const resultado = await darBaixaPeca(peca.codigoBarras, isAdmin ? lojaId : undefined);
+      setPecaPendente(null);
       contador.current += 1;
       if (resultado.ok && resultado.peca) {
-        setHistorico((h) => [
-          { key: contador.current, ok: true, ...resultado.peca! },
-          ...h,
-        ]);
+        setHistorico((h) => [{ key: contador.current, ok: true, ...resultado.peca! }, ...h]);
       } else {
         setHistorico((h) => [
           { key: contador.current, ok: false, mensagem: resultado.error ?? "Erro ao dar baixa." },
@@ -62,6 +85,11 @@ export function DarBaixaScanner({
       router.refresh();
       inputRef.current?.focus();
     });
+  }
+
+  function cancelarPendente() {
+    setPecaPendente(null);
+    inputRef.current?.focus();
   }
 
   return (
@@ -108,10 +136,38 @@ export function DarBaixaScanner({
           className="w-full rounded-lg border border-gray-light/50 bg-white px-4 py-4 text-lg font-mono text-ink placeholder:text-gray-light placeholder:text-sm focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold disabled:opacity-60"
         />
         <p className="text-xs text-gray-light">
-          Campo fica sempre em foco — basta ler o código com o leitor USB, ele confirma
-          automaticamente ao pressionar Enter.
+          Campo fica sempre em foco — ler outro código a qualquer momento substitui a peça em
+          confirmação, sem vendê-la.
         </p>
       </div>
+
+      {isPending && !pecaPendente && <p className="text-xs text-gray-light">Buscando…</p>}
+
+      {pecaPendente && (
+        <div className="rounded-lg border border-gold-light/60 bg-gold-light/10 p-4 flex flex-col sm:flex-row gap-4">
+          {pecaPendente.fotoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={pecaPendente.fotoUrl}
+              alt={pecaPendente.nome}
+              className="w-full sm:w-32 h-32 object-contain rounded-lg border border-gold-light/30 bg-cream shrink-0"
+            />
+          )}
+          <div className="flex-1 flex flex-col gap-1">
+            <div className="font-medium text-ink text-lg">{pecaPendente.nome}</div>
+            <div className="text-xs text-gray-light font-mono">{pecaPendente.codigoBarras}</div>
+            <div className="text-ink font-medium mt-1">{formatarMoeda(pecaPendente.preco)}</div>
+          </div>
+          <div className="flex sm:flex-col gap-2 justify-end">
+            <Button type="button" variant="secondary" disabled={isPending} onClick={cancelarPendente}>
+              Cancelar
+            </Button>
+            <Button type="button" disabled={isPending} onClick={confirmarVenda}>
+              {isPending ? "Confirmando…" : "Confirmar venda"}
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col gap-2">
         {historico.length === 0 ? (
@@ -147,8 +203,6 @@ export function DarBaixaScanner({
           ))
         )}
       </div>
-
-      {isPending && <p className="text-xs text-gray-light">Processando…</p>}
     </div>
   );
 }

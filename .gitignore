@@ -49,3 +49,7 @@ next-env.d.ts
 
 # estado interno do Claude Code, não faz parte do projeto
 /.claude/
+
+# fotos de peças enviadas pelos usuários (conteúdo, não código — precisa
+# entrar no backup do servidor separadamente, ver docs/backup.md)
+/public/uploads/

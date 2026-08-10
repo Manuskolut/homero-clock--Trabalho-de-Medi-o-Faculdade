@@ -1,10 +1,10 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { pecaSchema } from "@/lib/validation";
+import { pecaSchema, FOTO_PECA_TAMANHO_MAX } from "@/lib/validation";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { Prisma } from "@prisma/client";
+import { Prisma, type CategoriaPeca } from "@prisma/client";
 import type { ActionState } from "@/lib/actions/clientes";
 import {
   verifySession,
@@ -15,8 +15,48 @@ import {
   type Session,
 } from "@/lib/dal";
 import { podeReativarPeca } from "@/lib/format";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
+import { randomUUID } from "crypto";
 
 const CODIGO_BARRAS_LARGURA = 8;
+
+const PASTA_UPLOADS_PECAS = path.join(process.cwd(), "public", "uploads", "pecas");
+
+const EXTENSAO_POR_TIPO: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+
+// Salva a foto como arquivo em public/uploads/pecas (fora do SQLite) e
+// devolve o caminho público (ex: "/uploads/pecas/<uuid>.jpg") pra guardar em Peca.fotoUrl.
+async function salvarFotoPeca(file: File): Promise<string> {
+  if (file.size > FOTO_PECA_TAMANHO_MAX) {
+    throw new Error("A foto deve ter no máximo 5MB.");
+  }
+  const extensao = EXTENSAO_POR_TIPO[file.type];
+  if (!extensao) {
+    throw new Error("Formato de imagem não suportado. Use JPG, PNG ou WEBP.");
+  }
+
+  await mkdir(PASTA_UPLOADS_PECAS, { recursive: true });
+  const nomeArquivo = `${randomUUID()}.${extensao}`;
+  const buffer = Buffer.from(await file.arrayBuffer());
+  await writeFile(path.join(PASTA_UPLOADS_PECAS, nomeArquivo), buffer);
+
+  return `/uploads/pecas/${nomeArquivo}`;
+}
+
+// Monta a cláusula OR de busca por texto (nome ou referência) — devolve {}
+// (sem efeito no where) quando não há termo, pra poder espalhar direto.
+function filtroBusca(busca?: string): Prisma.PecaWhereInput {
+  const termo = busca?.trim();
+  if (!termo) return {};
+  return {
+    OR: [{ nome: { contains: termo } }, { referencia: { contains: termo } }],
+  };
+}
 
 function flattenErrors(error: import("zod").ZodError): Record<string, string> {
   const out: Record<string, string> = {};
@@ -77,19 +117,45 @@ export async function criarPeca(_prev: ActionState, formData: FormData): Promise
     nome: String(formData.get("nome") ?? ""),
     descricao: String(formData.get("descricao") ?? ""),
     preco: String(formData.get("preco") ?? ""),
+    categoria: String(formData.get("categoria") ?? ""),
+    peso: String(formData.get("peso") ?? ""),
+    referencia: String(formData.get("referencia") ?? ""),
     lojaDestinoId: String(formData.get("lojaDestinoId") ?? ""),
   });
   if (!parsed.success) {
     return { ok: false, errors: flattenErrors(parsed.error) };
   }
 
-  const status = parsed.data.lojaDestinoId === "mueller" ? "DISPONIVEL" : "AGUARDANDO_CONFIRMACAO";
+  let fotoUrl: string | null = null;
+  const foto = formData.get("foto");
+  if (foto instanceof File && foto.size > 0) {
+    try {
+      fotoUrl = await salvarFotoPeca(foto);
+    } catch (e) {
+      return { ok: false, errors: { foto: (e as Error).message } };
+    }
+  }
+
+  // Loja destino em branco = Mueller (destino padrão, sem etapa de confirmação).
+  const lojaDestinoId = parsed.data.lojaDestinoId || "mueller";
+  const status = lojaDestinoId === "mueller" ? "DISPONIVEL" : "AGUARDANDO_CONFIRMACAO";
+  // Peso só se aplica a Joia/Folheado — ignora valor enviado pra Relógio.
+  const peso = parsed.data.categoria === "RELOGIO" ? null : parsed.data.peso || null;
+  // Referência se aplica a Relógio e Folheado (Folheado tem os dois campos).
+  const referencia =
+    parsed.data.categoria === "RELOGIO" || parsed.data.categoria === "FOLHEADO"
+      ? parsed.data.referencia || null
+      : null;
 
   const peca = await criarPecaComCodigoSequencial({
     nome: parsed.data.nome,
     descricao: parsed.data.descricao || null,
     preco: Number(parsed.data.preco),
-    lojaDestinoId: parsed.data.lojaDestinoId,
+    categoria: parsed.data.categoria,
+    peso,
+    referencia,
+    fotoUrl,
+    lojaDestinoId,
     status,
   });
 
@@ -105,29 +171,44 @@ export async function obterPeca(id: string) {
     include: { lojaDestino: true, lojaVenda: true },
   });
   if (!peca) return null;
+  // Cobre exatamente as listas que cada loja já vê hoje: fila/confirmar
+  // (por lojaDestinoId, via temAcesso) e "Minhas vendas" (por lojaVendaId,
+  // que pode ser uma loja diferente do destino original da peça).
   const podeVer =
     session.tipo === "ADMIN" ||
     session.lojaId === "mueller" ||
-    temAcesso(session, peca.lojaDestinoId);
+    temAcesso(session, peca.lojaDestinoId) ||
+    (peca.lojaVendaId != null && peca.lojaVendaId === session.lojaId);
   if (!podeVer) return null;
   return peca;
 }
 
-export async function listarPecasFila(lojaIdFiltro?: string) {
+export type FiltroPecasFila = {
+  lojaId?: string;
+  categoria?: CategoriaPeca;
+  busca?: string;
+};
+
+export async function listarPecasFila(filtro: FiltroPecasFila = {}) {
   const session = await verifySession();
-  const lojaId = filtroLoja(session, lojaIdFiltro);
+  const lojaId = filtroLoja(session, filtro.lojaId);
 
   return prisma.peca.findMany({
     where: {
       status: { in: ["DISPONIVEL", "AGUARDANDO_CONFIRMACAO"] },
       ...(lojaId ? { lojaDestinoId: lojaId } : {}),
+      ...(filtro.categoria ? { categoria: filtro.categoria } : {}),
+      ...filtroBusca(filtro.busca),
     },
     include: { lojaDestino: true },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export async function listarPecasAguardandoConfirmacao(lojaIdFiltro?: string) {
+export async function listarPecasAguardandoConfirmacao(
+  lojaIdFiltro?: string,
+  categoriaFiltro?: CategoriaPeca
+) {
   const session = await verifySession();
   const lojaId = filtroLoja(session, lojaIdFiltro);
 
@@ -135,6 +216,7 @@ export async function listarPecasAguardandoConfirmacao(lojaIdFiltro?: string) {
     where: {
       status: "AGUARDANDO_CONFIRMACAO",
       ...(lojaId ? { lojaDestinoId: lojaId } : {}),
+      ...(categoriaFiltro ? { categoria: categoriaFiltro } : {}),
     },
     include: { lojaDestino: true },
     orderBy: { createdAt: "asc" },
@@ -162,6 +244,54 @@ export async function confirmarRecebimentoPeca(id: string) {
 
   revalidatePath("/pecas");
   revalidatePath("/pecas/confirmar");
+}
+
+export type PecaParaVenda = {
+  id: string;
+  nome: string;
+  codigoBarras: string;
+  preco: number;
+  fotoUrl: string | null;
+};
+
+export type BuscarPecaResultado = {
+  ok: boolean;
+  error?: string;
+  peca?: PecaParaVenda;
+};
+
+// Só consulta e valida — não muda status nem cria evento. Usado na etapa de
+// leitura do código de barras, antes da confirmação (ver darBaixaPeca, que
+// só roda quando o atendente clica em "Confirmar venda").
+export async function buscarPecaParaVenda(codigoBarras: string): Promise<BuscarPecaResultado> {
+  await verifySession();
+
+  const codigo = codigoBarras.trim();
+  if (!codigo) {
+    return { ok: false, error: "Informe o código de barras." };
+  }
+
+  const peca = await prisma.peca.findUnique({ where: { codigoBarras: codigo } });
+  if (!peca) {
+    return { ok: false, error: "Código de barras não encontrado." };
+  }
+  if (peca.status === "VENDIDA") {
+    return { ok: false, error: `Peça "${peca.nome}" já foi vendida.` };
+  }
+  if (peca.status !== "DISPONIVEL") {
+    return { ok: false, error: `Peça "${peca.nome}" ainda aguarda confirmação da loja destino.` };
+  }
+
+  return {
+    ok: true,
+    peca: {
+      id: peca.id,
+      nome: peca.nome,
+      codigoBarras: peca.codigoBarras,
+      preco: peca.preco,
+      fotoUrl: peca.fotoUrl,
+    },
+  };
 }
 
 export type DarBaixaResultado = {
@@ -216,14 +346,32 @@ export async function darBaixaPeca(
   return { ok: true, peca: { nome: peca.nome, codigoBarras: peca.codigoBarras, preco: peca.preco } };
 }
 
-export async function listarPecasVendidas(lojaIdFiltro?: string) {
+export type FiltroPecasVendidas = {
+  lojaId?: string;
+  categoria?: CategoriaPeca;
+  de?: string;
+  ate?: string;
+  busca?: string;
+};
+
+export async function listarPecasVendidas(filtro: FiltroPecasVendidas = {}) {
   const session = await verifySession();
-  const lojaId = filtroLoja(session, lojaIdFiltro);
+  const lojaId = filtroLoja(session, filtro.lojaId);
 
   return prisma.peca.findMany({
     where: {
       status: "VENDIDA",
       ...(lojaId ? { lojaVendaId: lojaId } : {}),
+      ...(filtro.categoria ? { categoria: filtro.categoria } : {}),
+      ...(filtro.de || filtro.ate
+        ? {
+            dataVenda: {
+              ...(filtro.de ? { gte: new Date(filtro.de) } : {}),
+              ...(filtro.ate ? { lte: new Date(`${filtro.ate}T23:59:59.999`) } : {}),
+            },
+          }
+        : {}),
+      ...filtroBusca(filtro.busca),
     },
     include: {
       lojaDestino: true,
@@ -309,13 +457,22 @@ export async function excluirPeca(id: string) {
 
 // Tela exclusiva da Mueller: como só ela cadastra peças, isto é o histórico
 // completo de tudo que já foi cadastrado, qualquer status ou destino.
-export async function listarPecasCadastradas() {
+export type FiltroPecasCadastradas = {
+  categoria?: CategoriaPeca;
+  busca?: string;
+};
+
+export async function listarPecasCadastradas(filtro: FiltroPecasCadastradas = {}) {
   const session = await verifySession();
   if (!podeCadastrarPecas(session)) {
     throw new Error("Ação restrita à loja Mueller.");
   }
 
   return prisma.peca.findMany({
+    where: {
+      ...(filtro.categoria ? { categoria: filtro.categoria } : {}),
+      ...filtroBusca(filtro.busca),
+    },
     include: {
       lojaDestino: true,
       lojaVenda: true,

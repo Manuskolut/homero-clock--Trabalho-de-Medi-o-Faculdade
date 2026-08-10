@@ -3,7 +3,21 @@
 import { useEffect, useRef } from "react";
 import JsBarcode from "jsbarcode";
 
-export function BarcodeSvg({ value, className }: { value: string; className?: string }) {
+export function BarcodeSvg({
+  value,
+  className,
+  height = 50,
+  fontSize = 14,
+  margin = 4,
+  barWidth = 2,
+}: {
+  value: string;
+  className?: string;
+  height?: number;
+  fontSize?: number;
+  margin?: number;
+  barWidth?: number;
+}) {
   const ref = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
@@ -11,11 +25,12 @@ export function BarcodeSvg({ value, className }: { value: string; className?: st
     JsBarcode(ref.current, value, {
       format: "CODE128",
       displayValue: true,
-      fontSize: 14,
-      height: 50,
-      margin: 4,
+      fontSize,
+      height,
+      margin,
+      width: barWidth,
     });
-  }, [value]);
+  }, [value, height, fontSize, margin, barWidth]);
 
   return <svg ref={ref} className={className} />;
 }

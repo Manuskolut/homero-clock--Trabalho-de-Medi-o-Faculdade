@@ -87,6 +87,9 @@ export function HeaderNav({ session }: { session: Session | null }) {
       ]
     : NAV_LINKS;
 
+  // Cabeçalho não aparece na tela de login (layout próprio, sem navegação).
+  if (pathname === "/login") return null;
+
   return (
     <header className="sticky top-0 z-30 border-b border-gold-light/50 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">

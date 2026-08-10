@@ -52,14 +52,27 @@ export default async function DashboardPage({
         </div>
         <div className="flex flex-wrap items-end gap-3">
           {lojas && <LojaFiltro lojas={lojas} />}
-          <LinkButton
-            href={loja ? `/ordens/novo?lojaId=${loja}` : "/ordens/novo"}
-            variant="primary"
-            className="btn-gold-shine"
-          >
-            + Nova Ordem
-          </LinkButton>
-          <LinkButton href="/ordens/dar-baixa" variant="secondary">
+          {/* Mobile: empilhado (Nova Ordem em cima, Venda embaixo, mais fino).
+              Desktop: "contents" dissolve o wrapper — os dois viram itens
+              diretos do flex pai, daí sm:order-* reordena junto com "Dar
+              baixa em OS" sem depender da posição no DOM. */}
+          <div className="flex flex-col gap-2 sm:contents">
+            <LinkButton
+              href={loja ? `/ordens/novo?lojaId=${loja}` : "/ordens/novo"}
+              variant="primary"
+              className="btn-gold-shine sm:order-1 sm:w-40 sm:justify-center"
+            >
+              + Nova Ordem
+            </LinkButton>
+            <LinkButton
+              href="/pecas/dar-baixa"
+              variant="primary"
+              className="sm:order-3 sm:w-40 sm:justify-center"
+            >
+              Venda
+            </LinkButton>
+          </div>
+          <LinkButton href="/ordens/dar-baixa" variant="secondary" className="sm:order-2">
             Dar baixa em OS
           </LinkButton>
         </div>

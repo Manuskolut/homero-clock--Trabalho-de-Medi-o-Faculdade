@@ -245,6 +245,22 @@ export const STATUS_PECA_OPTIONS = [
   { value: "VENDIDA", label: "Vendida" },
 ] as const;
 
+export const CATEGORIA_PECA_OPTIONS = [
+  { value: "JOIA", label: "Joia" },
+  { value: "FOLHEADO", label: "Folheado" },
+  { value: "RELOGIO", label: "Relógio" },
+] as const;
+
+// Categorias que aceitam o campo de peso (texto livre, ex: "3g") — relógio não.
+export const CATEGORIAS_COM_PESO = ["JOIA", "FOLHEADO"] as const;
+
+// Categorias que aceitam o campo de referência (só dígitos) — Folheado tem
+// os dois campos (peso e referência) ao mesmo tempo.
+export const CATEGORIAS_COM_REFERENCIA = ["RELOGIO", "FOLHEADO"] as const;
+
+export const FOTO_PECA_TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp"] as const;
+export const FOTO_PECA_TAMANHO_MAX = 5 * 1024 * 1024; // 5MB
+
 export const pecaSchema = z.object({
   nome: z.string().trim().min(2, "Informe o nome da peça"),
   descricao: z.string().trim().optional(),
@@ -255,5 +271,17 @@ export const pecaSchema = z.object({
     .refine((v) => !isNaN(Number(v)) && Number(v) >= 0, {
       message: "Informe um preço válido",
     }),
-  lojaDestinoId: z.string().trim().min(1, "Selecione a loja destino"),
+  categoria: z.enum(["JOIA", "FOLHEADO", "RELOGIO"], {
+    message: "Selecione a categoria da peça",
+  }),
+  peso: z.string().trim().optional(),
+  referencia: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || /^\d+$/.test(v), {
+      message: "Referência deve conter apenas números",
+    }),
+  // Em branco = Mueller (destino padrão), resolvido em criarPeca.
+  lojaDestinoId: z.string().trim().optional(),
 });

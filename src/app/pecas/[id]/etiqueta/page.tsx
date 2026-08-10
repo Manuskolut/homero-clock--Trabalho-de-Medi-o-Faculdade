@@ -18,6 +18,26 @@ export default async function EtiquetaPecaPage({
 
   return (
     <div className="flex flex-col gap-6">
+      {/* Etiqueta física é 60x15mm — bem menor que o @page padrão (A4) usado
+          pelas vias de OS. Escopado a esta página via <style> normal (não
+          styled-jsx): o elemento some do DOM ao navegar, então não vaza
+          para as outras rotas de impressão. */}
+      <style>{`
+        @page {
+          size: 60mm 15mm;
+          margin: 0;
+        }
+        @media print {
+          body { margin: 0 !important; }
+          header, footer { display: none !important; }
+          main {
+            padding: 0 !important;
+            margin: 0 !important;
+            max-width: none !important;
+          }
+        }
+      `}</style>
+
       <div className="flex items-center justify-between gap-4 flex-wrap print:hidden">
         <div className="flex items-center gap-3">
           <BackButton />
@@ -33,7 +53,7 @@ export default async function EtiquetaPecaPage({
         </div>
       </div>
 
-      <EtiquetaPeca nome={peca.nome} preco={peca.preco} codigoBarras={peca.codigoBarras} />
+      <EtiquetaPeca preco={peca.preco} codigoBarras={peca.codigoBarras} />
     </div>
   );
 }
