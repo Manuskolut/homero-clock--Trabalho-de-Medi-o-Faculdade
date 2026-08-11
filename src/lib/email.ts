@@ -12,7 +12,7 @@ import {
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const REMETENTE = "naoresponder@skolutech.com";
+const REMETENTE = "naoresponder@xn--gestohomeroclock-hnb.com";
 
 const AVISO_FISCAL = "Este documento não é nota fiscal e não tem valor fiscal.";
 
