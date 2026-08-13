@@ -50,22 +50,22 @@ para o caminho real de deploy, por exemplo:
 
 ```bash
 sudo mkdir -p /var/backups/homero-clock
-sudo chmod +x /var/www/homero-clock/scripts/backup-db.sh
+sudo chmod +x /var/www/homeroclock/scripts/backup-db.sh
 ```
 
 Teste rodando manualmente antes de agendar:
 
 ```bash
-DB_PATH=/var/www/homero-clock/prisma/dev.db \
+DB_PATH=/var/www/homeroclock/prisma/prod.db \
 BACKUP_DIR=/var/backups/homero-clock \
 RCLONE_REMOTE=gdrive:homero-clock-backups \
 RETENTION_DAYS=30 \
-/var/www/homero-clock/scripts/backup-db.sh
+/var/www/homeroclock/scripts/backup-db.sh
 ```
 
 Confirme que o arquivo apareceu no Drive (`rclone ls gdrive:homero-clock-backups`).
 
-## 4. Agendar via cron (3h da manhã)
+## 4. Agendar via cron (2h da manhã)
 
 ```bash
 crontab -e
@@ -74,7 +74,7 @@ crontab -e
 Adicione (ajustando os caminhos conforme o passo 3):
 
 ```cron
-0 3 * * * DB_PATH=/var/www/homero-clock/prisma/dev.db BACKUP_DIR=/var/backups/homero-clock RCLONE_REMOTE=gdrive:homero-clock-backups RETENTION_DAYS=30 /var/www/homero-clock/scripts/backup-db.sh >> /var/log/homero-clock-backup.log 2>&1
+0 2 * * * DB_PATH=/var/www/homeroclock/prisma/prod.db BACKUP_DIR=/var/backups/homero-clock RCLONE_REMOTE=gdrive:homero-clock-backups RETENTION_DAYS=30 /var/www/homeroclock/scripts/backup-db.sh >> /var/log/homero-clock-backup.log 2>&1
 ```
 
 ## 5. Retenção
@@ -91,7 +91,7 @@ Padrão: 30 dias. Ajuste a variável `RETENTION_DAYS` se quiser outra janela.
 rclone copy gdrive:homero-clock-backups/backup-2026-08-03.db.gz .
 gunzip backup-2026-08-03.db.gz
 # com a aplicação parada:
-cp backup-2026-08-03.db /var/www/homero-clock/prisma/dev.db
+cp backup-2026-08-03.db /var/www/homeroclock/prisma/prod.db
 ```
 
 Teste a restauração ao menos uma vez logo após configurar o backup, para
