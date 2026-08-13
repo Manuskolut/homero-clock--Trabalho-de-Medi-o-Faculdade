@@ -98,3 +98,30 @@ body {
     display: none;
   }
 }
+
+/* Impressão de vias em impressora térmica de 80mm — impede que o navegador
+   trate a página como A4/Carta (o que faz o rolo "correr" indefinidamente)
+   e força texto preto/negrito, já que impressoras térmicas reproduzem texto
+   fino de forma muito clara. */
+@media print {
+  @page {
+    size: 80mm auto;
+    margin: 3mm 2mm;
+  }
+
+  html,
+  body {
+    height: auto;
+    min-height: 0;
+  }
+
+  .via-print,
+  .via-print * {
+    color: #000 !important;
+  }
+
+  .via-logo {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}

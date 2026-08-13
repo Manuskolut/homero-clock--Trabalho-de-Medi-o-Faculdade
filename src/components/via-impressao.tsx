@@ -3,13 +3,12 @@ import {
   formatarMoeda,
   formatarNumeroOS,
   labelOficina,
-  calcularAngulosRelogio,
+  labelEstadoPeca,
   linhasRelogio,
   linhasPeca,
   type RelogioDetalhe,
   type JoiaPeca,
 } from "@/lib/format";
-import { ClockLogoIcon } from "@/components/icons/clock-logo";
 
 type DadosVia = {
   numeroOS: number;
@@ -35,8 +34,8 @@ function Separador() {
 function Linha({ label, valor }: { label: string; valor: string }) {
   return (
     <div className="flex justify-between gap-3">
-      <span className="text-ink/70">{label}</span>
-      <span className="text-ink font-medium text-right">{valor}</span>
+      <span className="text-ink/70 shrink-0 whitespace-nowrap">{label}</span>
+      <span className="text-ink font-medium text-right print:font-bold">{valor}</span>
     </div>
   );
 }
@@ -44,50 +43,81 @@ function Linha({ label, valor }: { label: string; valor: string }) {
 // Espaço em branco fixo para preenchimento manual à caneta (ex: data de
 // urgência, valor não lançado no sistema) — sem ligação com dado nenhum.
 function EspacoManual({ className = "w-20 h-8" }: { className?: string }) {
-  return <div className={`border border-ink/40 rounded ${className}`} />;
+  return <div className={`border-2 border-ink rounded print:border-2 ${className}`} />;
+}
+
+// Considera o valor "não definido" tanto quando está ausente quanto quando
+// ficou zerado (nenhum orçamento real de conserto é R$0,00 — na prática
+// significa que ainda não foi lançado no sistema).
+function valorIndefinido(valor: number | null | undefined): boolean {
+  return valor == null || valor === 0;
 }
 
 function Papel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[302px] bg-white border border-ink/20 rounded-md shadow-sm px-4 py-5 font-mono text-[12.5px] leading-relaxed text-ink print:shadow-none print:border-0 print:rounded-none break-after-page">
+    <div className="via-print mx-auto w-full max-w-[302px] bg-white border border-ink/20 rounded-md shadow-sm px-4 pt-0 pb-5 font-mono text-[15.625px] leading-relaxed text-ink break-words print:shadow-none print:border-0 print:rounded-none print:w-[76mm] print:max-w-[76mm] print:px-0 print:pt-0 print:pb-2 break-after-page">
       {children}
     </div>
   );
 }
 
-function Cabecalho({ numeroOS, lojaNome, rotulo }: { numeroOS: number; lojaNome: string; rotulo: string }) {
-  const { hourDeg, minuteDeg } = calcularAngulosRelogio();
+// Cabeçalho compartilhado pelas duas vias: logo da loja centralizada, depois
+// nome da loja (esquerda) e número da OS (direita) na mesma linha. A via da
+// loja ainda soma o aviso "URGENTE" com espaço em branco pra anotação manual
+// de data quando o caso exigir urgência (sem ligação com dados do sistema).
+function CabecalhoVia({
+  numeroOS,
+  lojaNome,
+  rotulo,
+  mostrarUrgente = false,
+}: {
+  numeroOS: number;
+  lojaNome: string;
+  rotulo: string;
+  mostrarUrgente?: boolean;
+}) {
   return (
-    <div className="text-center">
-      <div className="text-xs tracking-widest uppercase text-ink/60">Homero Clock Relojoarias</div>
-      <div className="flex items-center justify-center gap-2 mt-1">
-        <ClockLogoIcon className="h-[19px] w-[19px] text-ink shrink-0" hourDeg={hourDeg} minuteDeg={minuteDeg} />
+    <div className="flex flex-col items-center text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logovia.png"
+        alt="Homero Clock Relojóias"
+        className="via-logo h-[54px] w-auto object-contain"
+      />
+      <div className="w-full flex items-baseline justify-between mt-3">
         <span className="text-sm font-bold uppercase">{lojaNome}</span>
+        <span className="text-[20.8px] font-bold">OS Nº {formatarNumeroOS(numeroOS)}</span>
       </div>
-      <div className="text-base font-bold mt-0.5">OS Nº {formatarNumeroOS(numeroOS)}</div>
-      <div className="text-[11px] uppercase tracking-wide text-ink/60 mt-1">{rotulo}</div>
+      {mostrarUrgente && (
+        <div className="w-full flex justify-end mt-2">
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[15px] font-bold uppercase">Urgente</span>
+            <EspacoManual />
+          </div>
+        </div>
+      )}
+      <div className="text-[13.75px] uppercase tracking-wide text-ink/60 mt-1">{rotulo}</div>
     </div>
   );
 }
 
-// Cabeçalho exclusivo da Via da Loja — duas colunas: identificação da OS à
-// esquerda, e à direita um aviso "URGENTE" com um espaço em branco fixo
-// (sem ligação com dados do sistema) para anotação manual de data quando o
-// caso exigir urgência.
-function CabecalhoLoja({ numeroOS, lojaNome }: { numeroOS: number; lojaNome: string }) {
-  return (
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <div className="text-sm font-bold uppercase">{lojaNome}</div>
-        <div className="text-base font-bold mt-0.5">OS Nº {formatarNumeroOS(numeroOS)}</div>
-        <div className="text-[11px] uppercase tracking-wide text-ink/60 mt-1">Via Loja</div>
-      </div>
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        <div className="text-xs font-bold uppercase">Urgente</div>
-        <EspacoManual />
-      </div>
-    </div>
-  );
+// Linha-resumo do estado das peças do relógio na entrada (ex: "Caixa: Bom |
+// Pulseira: Regular | Vidro: Ruim | Mostrador: Bom") — mantida no tamanho de
+// fonte original (menor que o resto da via), pra não competir visualmente
+// com o restante do conteúdo. Espelha a mesma lógica de linhasRelogio() em
+// @/lib/format, mas calculada à parte pra poder receber esse estilo próprio
+// sem alterar a função compartilhada com o e-mail automático.
+function estadoRelogioLinha(relogio: RelogioDetalhe): string | null {
+  const estados = [
+    ["Caixa", labelEstadoPeca(relogio.estadoCaixa)],
+    ["Pulseira", labelEstadoPeca(relogio.estadoPulseira)],
+    ["Vidro", labelEstadoPeca(relogio.estadoVidro)],
+    ["Mostrador", labelEstadoPeca(relogio.estadoMostrador)],
+  ]
+    .filter(([, valor]) => valor)
+    .map(([campo, valor]) => `${campo}: ${valor}`)
+    .join(" | ");
+  return estados || null;
 }
 
 function BlocoRelogios({
@@ -100,13 +130,15 @@ function BlocoRelogios({
   return (
     <div className="flex flex-col gap-2.5">
       {relogios.map((relogio, i) => {
-        const { titulo, linhas } = linhasRelogio(relogio, i, mostrarEstados);
+        const { titulo, linhas } = linhasRelogio(relogio, i, false);
+        const estadoLinha = mostrarEstados ? estadoRelogioLinha(relogio) : null;
         return (
           <div key={i}>
             <div className="font-bold">{titulo}</div>
             {linhas.map((linha, j) => (
               <div key={j}>{linha}</div>
             ))}
+            {estadoLinha && <div className="text-[12.5px]">{estadoLinha}</div>}
           </div>
         );
       })}
@@ -135,7 +167,7 @@ function BlocoPecasJoia({ pecas }: { pecas: JoiaPeca[] }) {
 export function ViaCliente(dados: DadosVia) {
   return (
     <Papel>
-      <Cabecalho numeroOS={dados.numeroOS} lojaNome={dados.lojaNome} rotulo="Via do Cliente" />
+      <CabecalhoVia numeroOS={dados.numeroOS} lojaNome={dados.lojaNome} rotulo="Via do Cliente" />
       <Separador />
       <Linha label="Cliente" valor={dados.clienteNome} />
       <Linha label="Telefone" valor={dados.clienteTelefone} />
@@ -145,10 +177,13 @@ export function ViaCliente(dados: DadosVia) {
       )}
       {dados.tipoItem === "JOIA" && <BlocoPecasJoia pecas={dados.pecasJoia} />}
       <Separador />
-      <Linha label="Valor" valor={formatarMoeda(dados.valorOrcado)} />
+      <Linha
+        label="Valor"
+        valor={valorIndefinido(dados.valorOrcado) ? "—" : formatarMoeda(dados.valorOrcado)}
+      />
       <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} />
       <Separador />
-      <div className="border border-ink rounded px-2.5 py-2 text-center text-[11px] font-bold uppercase leading-snug">
+      <div className="border border-ink rounded px-2.5 py-2 text-center text-[13.75px] font-bold uppercase leading-snug">
         Este documento NÃO é nota fiscal
         <br />e não tem valor fiscal
       </div>
@@ -159,7 +194,12 @@ export function ViaCliente(dados: DadosVia) {
 export function ViaLoja(dados: DadosVia) {
   return (
     <Papel>
-      <CabecalhoLoja numeroOS={dados.numeroOS} lojaNome={dados.lojaNome} />
+      <CabecalhoVia
+        numeroOS={dados.numeroOS}
+        lojaNome={dados.lojaNome}
+        rotulo="Via Loja"
+        mostrarUrgente
+      />
       <Separador />
       <Linha label="Cliente" valor={dados.clienteNome} />
       <Linha label="Telefone" valor={dados.clienteTelefone} />
@@ -174,13 +214,16 @@ export function ViaLoja(dados: DadosVia) {
         <Linha label="Oficina destinada" valor={labelOficina(dados.oficina) ?? dados.oficina} />
       )}
       <div className="flex justify-between items-center gap-3">
-        <span className="text-ink/70">Valor</span>
-        {dados.valorOrcado != null ? (
-          <span className="text-ink font-medium text-right">
+        <span className="text-ink/70 shrink-0 whitespace-nowrap">Valor</span>
+        {!valorIndefinido(dados.valorOrcado) ? (
+          <span className="text-ink font-medium text-right print:font-bold">
             {formatarMoeda(dados.valorOrcado)}
           </span>
         ) : (
-          <EspacoManual className="w-16 h-5" />
+          <span className="flex items-center gap-1.5">
+            <span className="text-ink font-bold">R$</span>
+            <EspacoManual className="w-[83px] h-[26px]" />
+          </span>
         )}
       </div>
       {dados.tipoItem === "JOIA" && dados.custoOurives != null && (

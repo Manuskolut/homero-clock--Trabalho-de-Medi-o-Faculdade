@@ -91,7 +91,7 @@ export function HeaderNav({ session }: { session: Session | null }) {
   if (pathname === "/login") return null;
 
   return (
-    <header className="sticky top-0 z-30 border-b border-gold-light/50 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
+    <header className="print:hidden sticky top-0 z-30 border-b border-gold-light/50 bg-cream/95 backdrop-blur supports-[backdrop-filter]:bg-cream/80">
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-20 gap-6">
           <Link

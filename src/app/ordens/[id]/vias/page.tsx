@@ -35,7 +35,7 @@ export default async function ViasOrdemPage({
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 print:block">
       <div className="flex items-center justify-between gap-4 flex-wrap print:hidden">
         <div className="flex items-center gap-3">
           <BackButton />
@@ -51,7 +51,7 @@ export default async function ViasOrdemPage({
         </div>
       </div>
 
-      <div className="flex flex-col gap-6 print:gap-0">
+      <div className="flex flex-col gap-6 print:block print:gap-0">
         <ViaCliente {...dados} />
         <ViaLoja {...dados} />
       </div>
