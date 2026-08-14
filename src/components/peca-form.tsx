@@ -1,17 +1,32 @@
 "use client";
 
-import { useActionState, useState } from "react";
-import { TextField, TextAreaField, SelectField, FileField } from "@/components/ui/field";
+import { useActionState, useState, type ChangeEvent } from "react";
+import { TextField, TextAreaField, SelectField } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import {
   CATEGORIA_PECA_OPTIONS,
   CATEGORIAS_COM_PESO,
   CATEGORIAS_COM_REFERENCIA,
+  FOTO_PECA_TAMANHO_MAX,
 } from "@/lib/validation";
+import { comprimirFotoPeca } from "@/lib/image-compress";
 import type { ActionState } from "@/lib/actions/clientes";
 import { clsx } from "clsx";
 
 const initialState: ActionState = { ok: true };
+
+const ERRO_ENVIO_GENERICO =
+  "Não foi possível salvar a peça. Verifique sua conexão e tente novamente, ou escolha uma foto menor.";
+
+function ehErroDeRedirecionamento(erro: unknown): boolean {
+  return (
+    typeof erro === "object" &&
+    erro !== null &&
+    "digest" in erro &&
+    typeof (erro as { digest?: unknown }).digest === "string" &&
+    (erro as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+  );
+}
 
 type LojaOption = { id: string; nome: string };
 type Categoria = "JOIA" | "FOLHEADO" | "RELOGIO";
@@ -23,7 +38,51 @@ export function PecaForm({
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
   lojas: LojaOption[];
 }) {
-  const [state, formAction, isPending] = useActionState(action, initialState);
+  const [fotoErro, setFotoErro] = useState<string | null>(null);
+  const [fotoNome, setFotoNome] = useState<string | null>(null);
+  const [fotoProcessando, setFotoProcessando] = useState(false);
+
+  async function acaoComTratamentoDeErro(prev: ActionState, formData: FormData) {
+    try {
+      return await action(prev, formData);
+    } catch (erro) {
+      if (ehErroDeRedirecionamento(erro)) throw erro;
+      return { ok: false, errors: { _form: ERRO_ENVIO_GENERICO } };
+    }
+  }
+
+  async function handleFotoChange(e: ChangeEvent<HTMLInputElement>) {
+    const input = e.currentTarget;
+    const arquivo = input.files?.[0];
+    setFotoErro(null);
+    if (!arquivo) {
+      setFotoNome(null);
+      return;
+    }
+
+    setFotoProcessando(true);
+    try {
+      const comprimida = await comprimirFotoPeca(arquivo);
+      if (comprimida.size > FOTO_PECA_TAMANHO_MAX) {
+        setFotoErro("A foto é muito grande mesmo após compressão. Escolha uma imagem menor.");
+        setFotoNome(null);
+        input.value = "";
+        return;
+      }
+      const dt = new DataTransfer();
+      dt.items.add(comprimida);
+      input.files = dt.files;
+      setFotoNome(comprimida.name);
+    } catch {
+      setFotoErro("Não foi possível processar a foto. Tente novamente ou escolha outra imagem.");
+      setFotoNome(null);
+      input.value = "";
+    } finally {
+      setFotoProcessando(false);
+    }
+  }
+
+  const [state, formAction, isPending] = useActionState(acaoComTratamentoDeErro, initialState);
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const mostrarPeso = categoria
     ? (CATEGORIAS_COM_PESO as readonly string[]).includes(categoria)
@@ -109,13 +168,38 @@ export function PecaForm({
               )}
             </div>
           )}
-          <FileField
-            label="Foto (opcional)"
-            name="foto"
-            accept="image/jpeg,image/png,image/webp"
-            capture="environment"
-            error={state.errors?.foto}
-          />
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="foto" className="text-sm font-medium text-ink">
+              Foto (opcional)
+            </label>
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="foto"
+                className="cursor-pointer rounded-md bg-gold px-3 py-1.5 text-sm font-medium text-white transition-colors"
+              >
+                <span className="sm:hidden">Abrir câmera</span>
+                <span className="hidden sm:inline">Escolher arquivo</span>
+              </label>
+              <span className="text-sm text-gray truncate">
+                {fotoProcessando
+                  ? "Otimizando foto…"
+                  : (fotoNome ?? "Nenhum arquivo selecionado")}
+              </span>
+            </div>
+            <input
+              id="foto"
+              name="foto"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              capture="environment"
+              disabled={fotoProcessando}
+              onChange={handleFotoChange}
+              className="sr-only"
+            />
+            {(fotoErro ?? state.errors?.foto) && (
+              <span className="text-xs text-red-600">{fotoErro ?? state.errors?.foto}</span>
+            )}
+          </div>
           <SelectField
             label="Loja destino"
             name="lojaDestinoId"
