@@ -20,7 +20,8 @@ export default async function PecasCadastradasPage({
 }: {
   searchParams: Promise<{ categoria?: string; busca?: string }>;
 }) {
-  await requireMuellerOuAdminPagina();
+  const session = await requireMuellerOuAdminPagina();
+  const isAdmin = session.tipo === "ADMIN";
   const sp = await searchParams;
   const pecas = await listarPecasCadastradas({
     categoria: sp.categoria as CategoriaPeca | undefined,
@@ -66,7 +67,7 @@ export default async function PecasCadastradasPage({
                   <LinkButton href={`/pecas/${peca.id}/etiqueta`} variant="ghost">
                     Reimprimir etiqueta
                   </LinkButton>
-                  {peca._count.eventos > 0 ? (
+                  {peca._count.eventos > 0 && !isAdmin ? (
                     <span
                       className="text-xs text-gray-light"
                       title="Peças já vendidas em algum momento (mesmo reativadas depois) não podem ser excluídas."
@@ -74,7 +75,11 @@ export default async function PecasCadastradasPage({
                       Não pode excluir
                     </span>
                   ) : (
-                    <ExcluirPecaButton id={peca.id} nome={peca.nome} />
+                    <ExcluirPecaButton
+                      id={peca.id}
+                      nome={peca.nome}
+                      temHistorico={peca._count.eventos > 0}
+                    />
                   )}
                 </div>
               </div>
@@ -121,7 +126,7 @@ export default async function PecasCadastradasPage({
                         <LinkButton href={`/pecas/${peca.id}/etiqueta`} variant="ghost">
                           Reimprimir etiqueta
                         </LinkButton>
-                        {peca._count.eventos > 0 ? (
+                        {peca._count.eventos > 0 && !isAdmin ? (
                           <span
                             className="text-xs text-gray-light"
                             title="Peças já vendidas em algum momento (mesmo reativadas depois) não podem ser excluídas."
@@ -129,7 +134,11 @@ export default async function PecasCadastradasPage({
                             Não pode excluir
                           </span>
                         ) : (
-                          <ExcluirPecaButton id={peca.id} nome={peca.nome} />
+                          <ExcluirPecaButton
+                            id={peca.id}
+                            nome={peca.nome}
+                            temHistorico={peca._count.eventos > 0}
+                          />
                         )}
                       </div>
                     </td>

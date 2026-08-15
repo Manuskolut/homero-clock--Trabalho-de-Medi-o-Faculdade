@@ -15,7 +15,7 @@ import {
   type Session,
 } from "@/lib/dal";
 import { podeReativarPeca } from "@/lib/format";
-import { mkdir, writeFile } from "fs/promises";
+import { mkdir, writeFile, unlink } from "fs/promises";
 import path from "path";
 import { randomUUID } from "crypto";
 
@@ -420,17 +420,22 @@ export async function reativarPeca(id: string, lojaIdParaAdmin?: string) {
   revalidatePath("/pecas/vendidas");
 }
 
-// Exclusão de peça cadastrada por engano: só permitida se a peça NUNCA foi
-// vendida — não basta olhar o status atual, porque uma peça vendida e depois
-// reativada volta para DISPONIVEL mas já tem histórico em PecaEvento (e a FK
-// PecaEvento->Peca é ON DELETE RESTRICT, então o delete falharia mesmo assim).
-// Hard delete mesmo: peça sem nenhum evento não tem histórico de venda a
-// preservar (diferente de peça já vendida alguma vez, que nunca é excluída).
+// Exclusão de peça cadastrada por engano: pra loja Mueller, só permitida se
+// a peça NUNCA foi vendida — não basta olhar o status atual, porque uma
+// peça vendida e depois reativada volta para DISPONIVEL mas já tem
+// histórico em PecaEvento. Admin não tem essa restrição: pode excluir
+// qualquer peça (aberta, vendida ou reativada) — ação destrutiva e
+// irreversível, por isso o log de auditoria abaixo.
+// A FK PecaEvento->Peca é ON DELETE RESTRICT (não há cascade no schema),
+// então os eventos são apagados manualmente antes da peça, numa transação
+// (mesmo padrão de scripts/limpar-pecas-vendidas.ts), pra nunca sobrar
+// histórico órfão nem uma peça "meio excluída".
 export async function excluirPeca(id: string) {
   const session = await verifySession();
   if (!podeCadastrarPecas(session)) {
     throw new Error("Ação restrita à loja Mueller.");
   }
+  const isAdmin = session.tipo === "ADMIN";
 
   const atual = await prisma.peca.findUnique({
     where: { id },
@@ -439,20 +444,39 @@ export async function excluirPeca(id: string) {
   if (!atual) {
     throw new Error("Peça não encontrada.");
   }
-  if (atual.status === "VENDIDA") {
-    throw new Error("Não é possível excluir uma peça que já foi vendida.");
+
+  if (!isAdmin) {
+    if (atual.status === "VENDIDA") {
+      throw new Error("Não é possível excluir uma peça que já foi vendida.");
+    }
+    if (atual._count.eventos > 0) {
+      throw new Error(
+        "Não é possível excluir: esta peça já foi vendida em algum momento (e reativada depois)."
+      );
+    }
   }
-  if (atual._count.eventos > 0) {
-    throw new Error(
-      "Não é possível excluir: esta peça já foi vendida em algum momento (e reativada depois)."
+
+  if (isAdmin) {
+    console.warn(
+      `[auditoria] admin ${session.nome} (${session.userId}) excluiu a peça ` +
+        `${atual.codigoBarras} (id ${atual.id}, status ${atual.status}, ` +
+        `${atual._count.eventos} evento(s) de histórico) em ${new Date().toISOString()}`
     );
   }
 
-  await prisma.peca.delete({ where: { id } });
+  await prisma.$transaction([
+    prisma.pecaEvento.deleteMany({ where: { pecaId: id } }),
+    prisma.peca.delete({ where: { id } }),
+  ]);
+
+  if (atual.fotoUrl) {
+    await unlink(path.join(process.cwd(), "public", atual.fotoUrl)).catch(() => {});
+  }
 
   revalidatePath("/pecas");
   revalidatePath("/pecas/cadastradas");
   revalidatePath("/pecas/confirmar");
+  revalidatePath("/pecas/vendidas");
 }
 
 // Tela exclusiva da Mueller: como só ela cadastra peças, isto é o histórico
