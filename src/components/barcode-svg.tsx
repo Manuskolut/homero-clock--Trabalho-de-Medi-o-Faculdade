@@ -10,6 +10,7 @@ export function BarcodeSvg({
   fontSize = 14,
   margin = 4,
   barWidth = 2,
+  letterSpacing,
 }: {
   value: string;
   className?: string;
@@ -17,6 +18,9 @@ export function BarcodeSvg({
   fontSize?: number;
   margin?: number;
   barWidth?: number;
+  // JsBarcode não tem opção nativa de letter-spacing no texto abaixo das
+  // barras — aplicada direto no <text> gerado depois do render.
+  letterSpacing?: string;
 }) {
   const ref = useRef<SVGSVGElement>(null);
 
@@ -30,7 +34,11 @@ export function BarcodeSvg({
       margin,
       width: barWidth,
     });
-  }, [value, height, fontSize, margin, barWidth]);
+    if (letterSpacing) {
+      const text = ref.current.querySelector("text");
+      if (text) text.style.letterSpacing = letterSpacing;
+    }
+  }, [value, height, fontSize, margin, barWidth, letterSpacing]);
 
   return <svg ref={ref} className={className} />;
 }

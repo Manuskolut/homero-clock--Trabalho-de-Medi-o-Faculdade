@@ -19,9 +19,10 @@ export function EtiquetaPeca({
         <BarcodeSvg
           value={codigoBarras}
           height={34}
-          fontSize={6}
-          margin={2}
+          fontSize={6.9}
+          margin={4}
           barWidth={1.4}
+          letterSpacing="1.5px"
           className="h-[11mm] w-auto max-w-full"
         />
       </div>
