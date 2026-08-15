@@ -82,7 +82,7 @@ function CabecalhoVia({
       <img
         src="/logovia.png"
         alt="Homero Clock Relojóias"
-        className="via-logo h-[54px] w-auto object-contain"
+        className="via-logo h-[70px] w-auto object-contain"
       />
       <div className="w-full flex items-baseline justify-between mt-3">
         <span className="text-sm font-bold uppercase">{lojaNome}</span>
@@ -222,7 +222,7 @@ export function ViaLoja(dados: DadosVia) {
         ) : (
           <span className="flex items-center gap-1.5">
             <span className="text-ink font-bold">R$</span>
-            <EspacoManual className="w-[83px] h-[26px]" />
+            <EspacoManual className="w-[120px] h-[38px]" />
           </span>
         )}
       </div>
