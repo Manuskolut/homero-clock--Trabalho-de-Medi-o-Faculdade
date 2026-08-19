@@ -54,6 +54,7 @@ export default async function EtiquetaPecaPage({
       </div>
 
       <EtiquetaPeca
+        nome={peca.nome}
         preco={peca.preco}
         codigoBarras={peca.codigoBarras}
         categoria={peca.categoria}
