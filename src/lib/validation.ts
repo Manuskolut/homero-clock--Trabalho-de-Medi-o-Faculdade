@@ -258,30 +258,52 @@ export const CATEGORIAS_COM_PESO = ["JOIA", "FOLHEADO"] as const;
 // os dois campos (peso e referência) ao mesmo tempo.
 export const CATEGORIAS_COM_REFERENCIA = ["RELOGIO", "FOLHEADO"] as const;
 
+// Categorias cujo nome é impresso na etiqueta (ver EtiquetaPeca) — só essas
+// precisam respeitar o limite de caracteres que cabe em 2 linhas sem truncar.
+export const CATEGORIAS_COM_NOME_NA_ETIQUETA = ["JOIA", "FOLHEADO"] as const;
+
+// Maior nome testado visualmente na etiqueta (60x15mm, fonte 8px, 2 linhas
+// com line-clamp) que ainda coube sem truncar foi ~46 caracteres; nomes de
+// 50+ sempre truncaram. 40 dá margem de segurança confortável.
+export const NOME_PECA_ETIQUETA_MAX = 40;
+
 export const FOTO_PECA_TIPOS_ACEITOS = ["image/jpeg", "image/png", "image/webp"] as const;
 export const FOTO_PECA_TAMANHO_MAX = 5 * 1024 * 1024; // 5MB
 
-export const pecaSchema = z.object({
-  nome: z.string().trim().min(2, "Informe o nome da peça"),
-  descricao: z.string().trim().optional(),
-  preco: z
-    .string()
-    .trim()
-    .min(1, "Informe o preço")
-    .refine((v) => !isNaN(Number(v)) && Number(v) >= 0, {
-      message: "Informe um preço válido",
+export const pecaSchema = z
+  .object({
+    nome: z.string().trim().min(2, "Informe o nome da peça"),
+    descricao: z.string().trim().optional(),
+    preco: z
+      .string()
+      .trim()
+      .min(1, "Informe o preço")
+      .refine((v) => !isNaN(Number(v)) && Number(v) >= 0, {
+        message: "Informe um preço válido",
+      }),
+    categoria: z.enum(["JOIA", "FOLHEADO", "RELOGIO"], {
+      message: "Selecione a categoria da peça",
     }),
-  categoria: z.enum(["JOIA", "FOLHEADO", "RELOGIO"], {
-    message: "Selecione a categoria da peça",
-  }),
-  peso: z.string().trim().optional(),
-  referencia: z
-    .string()
-    .trim()
-    .optional()
-    .refine((v) => !v || /^\d+$/.test(v), {
-      message: "Referência deve conter apenas números",
-    }),
-  // Em branco = Mueller (destino padrão), resolvido em criarPeca.
-  lojaDestinoId: z.string().trim().optional(),
-});
+    peso: z.string().trim().optional(),
+    referencia: z
+      .string()
+      .trim()
+      .optional()
+      .refine((v) => !v || /^\d+$/.test(v), {
+        message: "Referência deve conter apenas números",
+      }),
+    // Em branco = Mueller (destino padrão), resolvido em criarPeca.
+    lojaDestinoId: z.string().trim().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      (CATEGORIAS_COM_NOME_NA_ETIQUETA as readonly string[]).includes(data.categoria) &&
+      data.nome.length > NOME_PECA_ETIQUETA_MAX
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["nome"],
+        message: `Nome muito longo para a etiqueta (máx. ${NOME_PECA_ETIQUETA_MAX} caracteres)`,
+      });
+    }
+  });

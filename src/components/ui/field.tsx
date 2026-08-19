@@ -13,20 +13,25 @@ function FieldWrapper({
   htmlFor,
   error,
   required,
+  hint,
   children,
 }: {
   label: string;
   htmlFor: string;
   error?: string;
   required?: boolean;
+  hint?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
-        {label}
-        {required && <span className="text-gold ml-0.5">*</span>}
-      </label>
+      <div className="flex items-baseline justify-between gap-2">
+        <label htmlFor={htmlFor} className="text-sm font-medium text-ink">
+          {label}
+          {required && <span className="text-gold ml-0.5">*</span>}
+        </label>
+        {hint && <span className="text-xs text-gray-light">{hint}</span>}
+      </div>
       {children}
       {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
@@ -38,15 +43,17 @@ export function TextField({
   name,
   error,
   required,
+  hint,
   className,
   ...props
 }: InputHTMLAttributes<HTMLInputElement> & {
   label: string;
   name: string;
   error?: string;
+  hint?: React.ReactNode;
 }) {
   return (
-    <FieldWrapper label={label} htmlFor={name} error={error} required={required}>
+    <FieldWrapper label={label} htmlFor={name} error={error} required={required} hint={hint}>
       <input
         id={name}
         name={name}

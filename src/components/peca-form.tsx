@@ -7,6 +7,8 @@ import {
   CATEGORIA_PECA_OPTIONS,
   CATEGORIAS_COM_PESO,
   CATEGORIAS_COM_REFERENCIA,
+  CATEGORIAS_COM_NOME_NA_ETIQUETA,
+  NOME_PECA_ETIQUETA_MAX,
   FOTO_PECA_TAMANHO_MAX,
 } from "@/lib/validation";
 import { comprimirFotoPeca } from "@/lib/image-compress";
@@ -84,11 +86,15 @@ export function PecaForm({
 
   const [state, formAction, isPending] = useActionState(acaoComTratamentoDeErro, initialState);
   const [categoria, setCategoria] = useState<Categoria | null>(null);
+  const [nome, setNome] = useState("");
   const mostrarPeso = categoria
     ? (CATEGORIAS_COM_PESO as readonly string[]).includes(categoria)
     : false;
   const mostrarReferencia = categoria
     ? (CATEGORIAS_COM_REFERENCIA as readonly string[]).includes(categoria)
+    : false;
+  const limitarNome = categoria
+    ? (CATEGORIAS_COM_NOME_NA_ETIQUETA as readonly string[]).includes(categoria)
     : false;
 
   return (
@@ -127,6 +133,10 @@ export function PecaForm({
             label="Nome da peça"
             name="nome"
             required
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            maxLength={limitarNome ? NOME_PECA_ETIQUETA_MAX : undefined}
+            hint={limitarNome ? `${nome.length}/${NOME_PECA_ETIQUETA_MAX}` : undefined}
             error={state.errors?.nome}
             placeholder="Ex: Pulseira de couro marrom"
           />
