@@ -22,6 +22,7 @@ import {
   parseRelogiosDetalhes,
   parsePecasJoia,
   paraInputDate,
+  calcularValorSinal,
 } from "@/lib/format";
 import { notFound } from "next/navigation";
 import Link from "next/link";
@@ -41,6 +42,7 @@ export default async function OrdemDetalhePage({
   const session = await getOptionalSession();
   const isAdmin = session?.tipo === "ADMIN";
   const atrasada = estaAtrasada(ordem.dataPrevista, ordem.status);
+  const vs = calcularValorSinal(ordem.valorOrcado, ordem.sinal, "Valor orçado");
   const somenteLeitura = ordem.dataRetirada != null;
   const relogios = parseRelogiosDetalhes(ordem.relogiosDetalhes);
   const pecasJoia = parsePecasJoia(ordem.pecasJoia);
@@ -114,10 +116,18 @@ export default async function OrdemDetalhePage({
               <dt className="text-xs uppercase tracking-wide text-gray">Tipo</dt>
               <dd className="text-ink mt-0.5">{labelTipoItem(ordem.tipoItem)}</dd>
             </div>
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-gray">Valor orçado</dt>
-              <dd className="text-ink mt-0.5">{formatarMoeda(ordem.valorOrcado)}</dd>
-            </div>
+            {(vs.temValor || !vs.temSinal) && (
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-gray">{vs.labelValor}</dt>
+                <dd className="text-ink mt-0.5">{vs.temValor ? vs.valorFormatado : "—"}</dd>
+              </div>
+            )}
+            {vs.temSinal && (
+              <div>
+                <dt className="text-xs uppercase tracking-wide text-gray">Sinal</dt>
+                <dd className="text-ink mt-0.5">{vs.sinalFormatado}</dd>
+              </div>
+            )}
             <div>
               <dt className="text-xs uppercase tracking-wide text-gray">Data de entrada</dt>
               <dd className="text-ink mt-0.5">{formatarData(ordem.dataEntrada)}</dd>

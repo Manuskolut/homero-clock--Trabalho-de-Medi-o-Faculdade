@@ -92,6 +92,7 @@ model Ordem {
   dataEntrada      DateTime
   dataPrevista     DateTime? // opcional no cadastro; exigido ao dar baixa
   valorOrcado      Float? // opcional no cadastro; exigido ao dar baixa
+  sinal            Float? // opcional, independente do valorOrcado — valor único por OS inteira
   observacoes      String?
 
   // Específico do fluxo Relógio — lista de até 6 relógios, cada um com seus

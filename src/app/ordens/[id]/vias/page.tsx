@@ -27,6 +27,7 @@ export default async function ViasOrdemPage({
     dataEntrada: ordem.dataEntrada,
     dataPrevista: ordem.dataPrevista,
     valorOrcado: ordem.valorOrcado,
+    sinal: ordem.sinal,
     custoOurives: ordem.custoOurives,
     observacoes: ordem.observacoes,
     oficina: ordem.oficina,

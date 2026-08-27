@@ -6,6 +6,7 @@ import {
   labelEstadoPeca,
   linhasRelogio,
   linhasPeca,
+  calcularValorSinal,
   type RelogioDetalhe,
   type JoiaPeca,
 } from "@/lib/format";
@@ -20,6 +21,7 @@ type DadosVia = {
   dataEntrada: Date | string;
   dataPrevista: Date | string | null;
   valorOrcado: number | null;
+  sinal: number | null;
   custoOurives: number | null;
   observacoes: string | null;
   oficina: string | null;
@@ -44,13 +46,6 @@ function Linha({ label, valor }: { label: string; valor: string }) {
 // urgência, valor não lançado no sistema) — sem ligação com dado nenhum.
 function EspacoManual({ className = "w-20 h-8" }: { className?: string }) {
   return <div className={`border-2 border-ink rounded print:border-2 ${className}`} />;
-}
-
-// Considera o valor "não definido" tanto quando está ausente quanto quando
-// ficou zerado (nenhum orçamento real de conserto é R$0,00 — na prática
-// significa que ainda não foi lançado no sistema).
-function valorIndefinido(valor: number | null | undefined): boolean {
-  return valor == null || valor === 0;
 }
 
 function Papel({ children }: { children: React.ReactNode }) {
@@ -165,6 +160,7 @@ function BlocoPecasJoia({ pecas }: { pecas: JoiaPeca[] }) {
 }
 
 export function ViaCliente(dados: DadosVia) {
+  const vs = calcularValorSinal(dados.valorOrcado, dados.sinal);
   return (
     <Papel>
       <CabecalhoVia numeroOS={dados.numeroOS} lojaNome={dados.lojaNome} rotulo="Via do Cliente" />
@@ -177,10 +173,10 @@ export function ViaCliente(dados: DadosVia) {
       )}
       {dados.tipoItem === "JOIA" && <BlocoPecasJoia pecas={dados.pecasJoia} />}
       <Separador />
-      <Linha
-        label="Valor"
-        valor={valorIndefinido(dados.valorOrcado) ? "—" : formatarMoeda(dados.valorOrcado)}
-      />
+      {(vs.temValor || !vs.temSinal) && (
+        <Linha label={vs.labelValor} valor={vs.temValor ? vs.valorFormatado : "—"} />
+      )}
+      {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} />}
       <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} />
       <Separador />
       <div className="border border-ink rounded px-2.5 py-2 text-center text-[13.75px] font-bold uppercase leading-snug">
@@ -192,6 +188,7 @@ export function ViaCliente(dados: DadosVia) {
 }
 
 export function ViaLoja(dados: DadosVia) {
+  const vs = calcularValorSinal(dados.valorOrcado, dados.sinal);
   return (
     <Papel>
       <CabecalhoVia
@@ -214,10 +211,10 @@ export function ViaLoja(dados: DadosVia) {
         <Linha label="Oficina destinada" valor={labelOficina(dados.oficina) ?? dados.oficina} />
       )}
       <div className="flex justify-between items-center gap-3">
-        <span className="text-ink/70 shrink-0 whitespace-nowrap">Valor</span>
-        {!valorIndefinido(dados.valorOrcado) ? (
+        <span className="text-ink/70 shrink-0 whitespace-nowrap">{vs.labelValor}</span>
+        {vs.temValor ? (
           <span className="text-ink font-medium text-right print:font-bold">
-            {formatarMoeda(dados.valorOrcado)}
+            {vs.valorFormatado}
           </span>
         ) : (
           <span className="flex items-center gap-1.5">
@@ -226,6 +223,7 @@ export function ViaLoja(dados: DadosVia) {
           </span>
         )}
       </div>
+      {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} />}
       {dados.tipoItem === "JOIA" && dados.custoOurives != null && (
         <Linha label="Custo do ourives" valor={formatarMoeda(dados.custoOurives)} />
       )}

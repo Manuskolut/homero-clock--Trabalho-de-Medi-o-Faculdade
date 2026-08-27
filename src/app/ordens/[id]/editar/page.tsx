@@ -46,6 +46,7 @@ export default async function EditarOrdemPage({
           dataEntrada: paraInputDate(ordem.dataEntrada),
           dataPrevista: paraInputDate(ordem.dataPrevista),
           valorOrcado: ordem.valorOrcado ?? undefined,
+          sinal: ordem.sinal ?? undefined,
           observacoes: ordem.observacoes,
           relogios: parseRelogiosDetalhes(ordem.relogiosDetalhes),
           oficina: ordem.oficina,

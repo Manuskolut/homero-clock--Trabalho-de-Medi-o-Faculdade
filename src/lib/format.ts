@@ -51,6 +51,43 @@ export function formatarMoeda(valor: number | null | undefined): string {
   return valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
+// Considera o valor "não definido" tanto quando está ausente quanto quando
+// ficou zerado (nenhum orçamento/sinal real é R$0,00 — na prática significa
+// que ainda não foi lançado no sistema).
+export function valorIndefinido(valor: number | null | undefined): boolean {
+  return valor == null || valor === 0;
+}
+
+export type ValorSinalInfo = {
+  temValor: boolean;
+  temSinal: boolean;
+  /** "{labelValorBase} total" quando valor e sinal coexistem, senão labelValorBase. */
+  labelValor: string;
+  valorFormatado: string;
+  sinalFormatado: string;
+};
+
+// Lógica de exibição condicional de Valor/Sinal, compartilhada entre vias de
+// impressão, e-mails automáticos e a tela de detalhe da OS: quando só o
+// sinal está preenchido, o valor não deve ser exibido (nem "—" nem R$0,00);
+// nos demais casos, o comportamento de Valor permanece o de antes do Sinal
+// existir.
+export function calcularValorSinal(
+  valorOrcado: number | null | undefined,
+  sinal: number | null | undefined,
+  labelValorBase: string = "Valor"
+): ValorSinalInfo {
+  const temValor = !valorIndefinido(valorOrcado);
+  const temSinal = !valorIndefinido(sinal);
+  return {
+    temValor,
+    temSinal,
+    labelValor: temValor && temSinal ? `${labelValorBase} total` : labelValorBase,
+    valorFormatado: formatarMoeda(valorOrcado),
+    sinalFormatado: formatarMoeda(sinal),
+  };
+}
+
 export function formatarCpf(cpf: string | null | undefined): string {
   if (!cpf) return "—";
   const digitos = cpf.replace(/\D/g, "");

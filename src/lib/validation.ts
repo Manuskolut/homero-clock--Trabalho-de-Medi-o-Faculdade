@@ -167,6 +167,15 @@ const camposComuns = {
     .refine((v) => !v || (!isNaN(Number(v)) && Number(v) >= 0), {
       message: "Informe um valor válido",
     }),
+  // Independente de valorOrcado — pode estar preenchido mesmo com o valor
+  // vazio (e vice-versa). Único por OS inteira, não por item.
+  sinal: z
+    .string()
+    .trim()
+    .optional()
+    .refine((v) => !v || (!isNaN(Number(v)) && Number(v) >= 0), {
+      message: "Informe um sinal válido",
+    }),
   observacoes: z.string().trim().optional(),
 };
 

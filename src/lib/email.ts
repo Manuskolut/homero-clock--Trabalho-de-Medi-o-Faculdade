@@ -6,8 +6,8 @@ import {
   linhasRelogio,
   linhasPeca,
   formatarData,
-  formatarMoeda,
   formatarNumeroOS,
+  calcularValorSinal,
 } from "@/lib/format";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -57,7 +57,27 @@ type DadosServico = {
   relogiosDetalhes: unknown;
   pecasJoia: unknown;
   valorOrcado: number | null;
+  sinal: number | null;
 };
+
+// Linhas de Valor/Sinal a exibir no e-mail — mesma lógica condicional usada
+// nas vias de impressão e na tela de detalhe da OS (ver calcularValorSinal
+// em @/lib/format).
+function linhasValorSinal(
+  valorOrcado: number | null,
+  sinal: number | null,
+  labelValorBase: string
+): string[] {
+  const vs = calcularValorSinal(valorOrcado, sinal, labelValorBase);
+  const linhas: string[] = [];
+  if (vs.temValor || !vs.temSinal) {
+    linhas.push(`${vs.labelValor}: ${vs.temValor ? vs.valorFormatado : "—"}`);
+  }
+  if (vs.temSinal) {
+    linhas.push(`Sinal: ${vs.sinalFormatado}`);
+  }
+  return linhas;
+}
 
 export async function enviarEmailEntradaOrdem(dados: DadosServico & { dataEntrada: Date }) {
   const os = formatarNumeroOS(dados.numeroOS);
@@ -72,7 +92,7 @@ export async function enviarEmailEntradaOrdem(dados: DadosServico & { dataEntrad
     "Serviço(s) a realizar:",
     servico,
     "",
-    `Valor orçado: ${formatarMoeda(dados.valorOrcado)}`,
+    ...linhasValorSinal(dados.valorOrcado, dados.sinal, "Valor orçado"),
     `Data de entrada: ${formatarData(dados.dataEntrada)}`,
     "",
     AVISO_FISCAL,
@@ -92,7 +112,7 @@ export async function enviarEmailBaixaOrdem(dados: DadosServico & { dataRetirada
     "Serviço realizado:",
     servico,
     "",
-    `Valor: ${formatarMoeda(dados.valorOrcado)}`,
+    ...linhasValorSinal(dados.valorOrcado, dados.sinal, "Valor"),
     `Data de retirada: ${formatarData(dados.dataRetirada)}`,
     "",
     AVISO_FISCAL,

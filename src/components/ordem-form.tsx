@@ -38,6 +38,7 @@ export function OrdemForm({
     dataEntrada?: string;
     dataPrevista?: string;
     valorOrcado?: number;
+    sinal?: number;
     observacoes?: string | null;
     relogios?: RelogioDetalhe[];
     oficina?: string | null;
@@ -288,6 +289,16 @@ export function OrdemForm({
               defaultValue={defaultValues?.valorOrcado}
               error={state.errors?.valorOrcado}
               placeholder="Ex: 350.00"
+            />
+            <TextField
+              label="Sinal (opcional)"
+              name="sinal"
+              type="number"
+              step="0.01"
+              min="0"
+              defaultValue={defaultValues?.sinal}
+              error={state.errors?.sinal}
+              placeholder="Ex: 100.00"
             />
           </div>
 

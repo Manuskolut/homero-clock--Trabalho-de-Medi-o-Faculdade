@@ -109,6 +109,7 @@ function parseOrdemForm(formData: FormData) {
     dataEntrada: String(formData.get("dataEntrada") ?? ""),
     dataPrevista: String(formData.get("dataPrevista") ?? ""),
     valorOrcado: String(formData.get("valorOrcado") ?? ""),
+    sinal: String(formData.get("sinal") ?? ""),
     observacoes: String(formData.get("observacoes") ?? ""),
   };
 
@@ -262,6 +263,7 @@ export async function criarOrdem(
         ? new Date(parsed.data.dataPrevista)
         : somarDias(dataEntrada, PRAZO_PADRAO_DIAS),
       valorOrcado: parsed.data.valorOrcado ? Number(parsed.data.valorOrcado) : null,
+      sinal: parsed.data.sinal ? Number(parsed.data.sinal) : null,
       observacoes: parsed.data.observacoes || null,
       ...dadosEspecificosPorTipo(parsed.data),
     }
@@ -278,6 +280,7 @@ export async function criarOrdem(
       relogiosDetalhes: ordem.relogiosDetalhes,
       pecasJoia: ordem.pecasJoia,
       valorOrcado: ordem.valorOrcado,
+      sinal: ordem.sinal,
       dataEntrada: ordem.dataEntrada,
     });
   }
@@ -322,6 +325,7 @@ export async function atualizarOrdem(
       dataEntrada: new Date(parsed.data.dataEntrada),
       dataPrevista: parsed.data.dataPrevista ? new Date(parsed.data.dataPrevista) : null,
       valorOrcado: parsed.data.valorOrcado ? Number(parsed.data.valorOrcado) : null,
+      sinal: parsed.data.sinal ? Number(parsed.data.sinal) : null,
       observacoes: parsed.data.observacoes || null,
       ...dadosEspecificosPorTipo(parsed.data),
     },
@@ -441,6 +445,7 @@ export async function encerrarOrdem(
       relogiosDetalhes: atual.relogiosDetalhes,
       pecasJoia: atual.pecasJoia,
       valorOrcado: Number(parsed.data.valorOrcado),
+      sinal: atual.sinal,
       dataRetirada: new Date(parsed.data.dataRetirada),
     });
   }
