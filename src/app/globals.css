@@ -99,6 +99,14 @@ body {
   }
 }
 
+/* Força texto preto puro — usada tanto no @media print (impressão via
+   navegador) quanto no modo "captura" (rasterização client-side da via para
+   envio direto ao RawBT no Android, que não passa pelo @media print). */
+.via-forcar-preto,
+.via-forcar-preto * {
+  color: #000 !important;
+}
+
 /* Impressão de vias em impressora térmica de 80mm — impede que o navegador
    trate a página como A4/Carta (o que faz o rolo "correr" indefinidamente)
    e força texto preto/negrito, já que impressoras térmicas reproduzem texto

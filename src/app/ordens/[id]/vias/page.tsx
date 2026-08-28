@@ -48,7 +48,7 @@ export default async function ViasOrdemPage({
           <LinkButton href={`/ordens/${ordem.id}`} variant="secondary">
             Ver OS completa
           </LinkButton>
-          <ImprimirViaButton />
+          <ImprimirViaButton dados={dados} />
         </div>
       </div>
 

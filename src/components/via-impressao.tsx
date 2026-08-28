@@ -11,7 +11,7 @@ import {
   type JoiaPeca,
 } from "@/lib/format";
 
-type DadosVia = {
+export type DadosVia = {
   numeroOS: number;
   lojaNome: string;
   clienteNome: string;
@@ -33,11 +33,27 @@ function Separador() {
   return <div className="border-t border-dashed border-ink/40 my-2.5" />;
 }
 
-function Linha({ label, valor }: { label: string; valor: string }) {
+function Linha({
+  label,
+  valor,
+  captura = false,
+}: {
+  label: string;
+  valor: string;
+  captura?: boolean;
+}) {
   return (
     <div className="flex justify-between gap-3">
       <span className="text-ink/70 shrink-0 whitespace-nowrap">{label}</span>
-      <span className="text-ink font-medium text-right print:font-bold">{valor}</span>
+      <span
+        className={
+          captura
+            ? "text-ink font-bold text-right"
+            : "text-ink font-medium text-right print:font-bold"
+        }
+      >
+        {valor}
+      </span>
     </div>
   );
 }
@@ -48,9 +64,21 @@ function EspacoManual({ className = "w-20 h-8" }: { className?: string }) {
   return <div className={`border-2 border-ink rounded print:border-2 ${className}`} />;
 }
 
-function Papel({ children }: { children: React.ReactNode }) {
+function Papel({
+  children,
+  captura = false,
+}: {
+  children: React.ReactNode;
+  captura?: boolean;
+}) {
   return (
-    <div className="via-print mx-auto w-full max-w-[302px] bg-white border border-ink/20 rounded-md shadow-sm px-4 pt-0 pb-5 font-mono text-[15.625px] leading-relaxed text-ink break-words print:shadow-none print:border-0 print:rounded-none print:w-[76mm] print:max-w-[76mm] print:px-0 print:pt-0 print:pb-2 break-after-page">
+    <div
+      className={
+        captura
+          ? "via-print via-forcar-preto mx-auto w-[76mm] max-w-[76mm] bg-white px-0 pt-0 pb-2 font-mono text-[15.625px] leading-relaxed text-ink break-words shadow-none border-0 rounded-none"
+          : "via-print mx-auto w-full max-w-[302px] bg-white border border-ink/20 rounded-md shadow-sm px-4 pt-0 pb-5 font-mono text-[15.625px] leading-relaxed text-ink break-words print:shadow-none print:border-0 print:rounded-none print:w-[76mm] print:max-w-[76mm] print:px-0 print:pt-0 print:pb-2 break-after-page"
+      }
+    >
       {children}
     </div>
   );
@@ -159,14 +187,15 @@ function BlocoPecasJoia({ pecas }: { pecas: JoiaPeca[] }) {
   );
 }
 
-export function ViaCliente(dados: DadosVia) {
+export function ViaCliente(dados: DadosVia & { captura?: boolean }) {
+  const { captura = false } = dados;
   const vs = calcularValorSinal(dados.valorOrcado, dados.sinal);
   return (
-    <Papel>
+    <Papel captura={captura}>
       <CabecalhoVia numeroOS={dados.numeroOS} lojaNome={dados.lojaNome} rotulo="Via do Cliente" />
       <Separador />
-      <Linha label="Cliente" valor={dados.clienteNome} />
-      <Linha label="Telefone" valor={dados.clienteTelefone} />
+      <Linha label="Cliente" valor={dados.clienteNome} captura={captura} />
+      <Linha label="Telefone" valor={dados.clienteTelefone} captura={captura} />
       <Separador />
       {dados.tipoItem === "RELOGIO" && dados.relogios.length > 0 && (
         <BlocoRelogios relogios={dados.relogios} />
@@ -174,10 +203,14 @@ export function ViaCliente(dados: DadosVia) {
       {dados.tipoItem === "JOIA" && <BlocoPecasJoia pecas={dados.pecasJoia} />}
       <Separador />
       {(vs.temValor || !vs.temSinal) && (
-        <Linha label={vs.labelValor} valor={vs.temValor ? vs.valorFormatado : "—"} />
+        <Linha
+          label={vs.labelValor}
+          valor={vs.temValor ? vs.valorFormatado : "—"}
+          captura={captura}
+        />
       )}
-      {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} />}
-      <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} />
+      {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} captura={captura} />}
+      <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} captura={captura} />
       <Separador />
       <div className="border border-ink rounded px-2.5 py-2 text-center text-[13.75px] font-bold uppercase leading-snug">
         Este documento NÃO é nota fiscal
@@ -187,10 +220,11 @@ export function ViaCliente(dados: DadosVia) {
   );
 }
 
-export function ViaLoja(dados: DadosVia) {
+export function ViaLoja(dados: DadosVia & { captura?: boolean }) {
+  const { captura = false } = dados;
   const vs = calcularValorSinal(dados.valorOrcado, dados.sinal);
   return (
-    <Papel>
+    <Papel captura={captura}>
       <CabecalhoVia
         numeroOS={dados.numeroOS}
         lojaNome={dados.lojaNome}
@@ -198,9 +232,11 @@ export function ViaLoja(dados: DadosVia) {
         mostrarUrgente
       />
       <Separador />
-      <Linha label="Cliente" valor={dados.clienteNome} />
-      <Linha label="Telefone" valor={dados.clienteTelefone} />
-      {dados.clienteEmail && <Linha label="E-mail" valor={dados.clienteEmail} />}
+      <Linha label="Cliente" valor={dados.clienteNome} captura={captura} />
+      <Linha label="Telefone" valor={dados.clienteTelefone} captura={captura} />
+      {dados.clienteEmail && (
+        <Linha label="E-mail" valor={dados.clienteEmail} captura={captura} />
+      )}
       <Separador />
       {dados.tipoItem === "RELOGIO" && dados.relogios.length > 0 && (
         <BlocoRelogios relogios={dados.relogios} mostrarEstados={false} />
@@ -208,12 +244,22 @@ export function ViaLoja(dados: DadosVia) {
       {dados.tipoItem === "JOIA" && <BlocoPecasJoia pecas={dados.pecasJoia} />}
       <Separador />
       {dados.tipoItem === "RELOGIO" && dados.oficina && (
-        <Linha label="Oficina destinada" valor={labelOficina(dados.oficina) ?? dados.oficina} />
+        <Linha
+          label="Oficina destinada"
+          valor={labelOficina(dados.oficina) ?? dados.oficina}
+          captura={captura}
+        />
       )}
       <div className="flex justify-between items-center gap-3">
         <span className="text-ink/70 shrink-0 whitespace-nowrap">{vs.labelValor}</span>
         {vs.temValor ? (
-          <span className="text-ink font-medium text-right print:font-bold">
+          <span
+            className={
+              captura
+                ? "text-ink font-bold text-right"
+                : "text-ink font-medium text-right print:font-bold"
+            }
+          >
             {vs.valorFormatado}
           </span>
         ) : (
@@ -223,12 +269,20 @@ export function ViaLoja(dados: DadosVia) {
           </span>
         )}
       </div>
-      {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} />}
+      {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} captura={captura} />}
       {dados.tipoItem === "JOIA" && dados.custoOurives != null && (
-        <Linha label="Custo do ourives" valor={formatarMoeda(dados.custoOurives)} />
+        <Linha
+          label="Custo do ourives"
+          valor={formatarMoeda(dados.custoOurives)}
+          captura={captura}
+        />
       )}
-      <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} />
-      <Linha label="Data prometida" valor={formatarData(dados.dataPrevista)} />
+      <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} captura={captura} />
+      <Linha
+        label="Data prometida"
+        valor={formatarData(dados.dataPrevista)}
+        captura={captura}
+      />
       {dados.observacoes && (
         <>
           <Separador />
