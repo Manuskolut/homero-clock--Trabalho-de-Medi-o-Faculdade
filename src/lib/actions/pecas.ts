@@ -118,7 +118,6 @@ export async function criarPeca(_prev: ActionState, formData: FormData): Promise
     descricao: String(formData.get("descricao") ?? ""),
     preco: String(formData.get("preco") ?? ""),
     categoria: String(formData.get("categoria") ?? ""),
-    peso: String(formData.get("peso") ?? ""),
     referencia: String(formData.get("referencia") ?? ""),
     lojaDestinoId: String(formData.get("lojaDestinoId") ?? ""),
   });
@@ -139,8 +138,9 @@ export async function criarPeca(_prev: ActionState, formData: FormData): Promise
   // Loja destino em branco = Mueller (destino padrão, sem etapa de confirmação).
   const lojaDestinoId = parsed.data.lojaDestinoId || "mueller";
   const status = lojaDestinoId === "mueller" ? "DISPONIVEL" : "AGUARDANDO_CONFIRMACAO";
-  // Peso só se aplica a Joia/Folheado — ignora valor enviado pra Relógio.
-  const peso = parsed.data.categoria === "RELOGIO" ? null : parsed.data.peso || null;
+  // Preço vazio só passa da validação quando a categoria é Joia (ver
+  // pecaSchema) — nesse caso fica null em vez de forçar um número.
+  const preco = parsed.data.preco === "" ? null : Number(parsed.data.preco);
   // Referência se aplica a Relógio e Folheado (Folheado tem os dois campos).
   const referencia =
     parsed.data.categoria === "RELOGIO" || parsed.data.categoria === "FOLHEADO"
@@ -150,9 +150,8 @@ export async function criarPeca(_prev: ActionState, formData: FormData): Promise
   const peca = await criarPecaComCodigoSequencial({
     nome: parsed.data.nome,
     descricao: parsed.data.descricao || null,
-    preco: Number(parsed.data.preco),
+    preco,
     categoria: parsed.data.categoria,
-    peso,
     referencia,
     fotoUrl,
     lojaDestinoId,
@@ -250,7 +249,7 @@ export type PecaParaVenda = {
   id: string;
   nome: string;
   codigoBarras: string;
-  preco: number;
+  preco: number | null;
   fotoUrl: string | null;
 };
 
@@ -297,7 +296,7 @@ export async function buscarPecaParaVenda(codigoBarras: string): Promise<BuscarP
 export type DarBaixaResultado = {
   ok: boolean;
   error?: string;
-  peca?: { nome: string; codigoBarras: string; preco: number };
+  peca?: { nome: string; codigoBarras: string; preco: number | null };
 };
 
 export async function darBaixaPeca(

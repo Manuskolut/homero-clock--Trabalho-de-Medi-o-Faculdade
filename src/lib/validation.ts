@@ -260,11 +260,7 @@ export const CATEGORIA_PECA_OPTIONS = [
   { value: "RELOGIO", label: "Relógio" },
 ] as const;
 
-// Categorias que aceitam o campo de peso (texto livre, ex: "3g") — relógio não.
-export const CATEGORIAS_COM_PESO = ["JOIA", "FOLHEADO"] as const;
-
-// Categorias que aceitam o campo de referência (só dígitos) — Folheado tem
-// os dois campos (peso e referência) ao mesmo tempo.
+// Categorias que aceitam o campo de referência (só dígitos).
 export const CATEGORIAS_COM_REFERENCIA = ["RELOGIO", "FOLHEADO"] as const;
 
 // Categorias cujo nome é impresso na etiqueta (ver EtiquetaPeca) — só essas
@@ -283,17 +279,17 @@ export const pecaSchema = z
   .object({
     nome: z.string().trim().min(2, "Informe o nome da peça"),
     descricao: z.string().trim().optional(),
+    // Obrigatoriedade depende da categoria (Joia pode ficar sem preço
+    // definido ainda) — validado abaixo, no superRefine.
     preco: z
       .string()
       .trim()
-      .min(1, "Informe o preço")
-      .refine((v) => !isNaN(Number(v)) && Number(v) >= 0, {
+      .refine((v) => v === "" || (!isNaN(Number(v)) && Number(v) >= 0), {
         message: "Informe um preço válido",
       }),
     categoria: z.enum(["JOIA", "FOLHEADO", "RELOGIO"], {
       message: "Selecione a categoria da peça",
     }),
-    peso: z.string().trim().optional(),
     referencia: z
       .string()
       .trim()
@@ -313,6 +309,14 @@ export const pecaSchema = z
         code: z.ZodIssueCode.custom,
         path: ["nome"],
         message: `Nome muito longo para a etiqueta (máx. ${NOME_PECA_ETIQUETA_MAX} caracteres)`,
+      });
+    }
+    // Preço é opcional só para Joia — Folheado e Relógio continuam exigindo.
+    if (data.categoria !== "JOIA" && data.preco === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["preco"],
+        message: "Informe o preço",
       });
     }
   });

@@ -62,12 +62,6 @@ export default async function PecaDetalhePage({
             <dt className="text-xs uppercase tracking-wide text-gray">Preço</dt>
             <dd className="text-ink mt-0.5">{formatarMoeda(peca.preco)}</dd>
           </div>
-          {peca.peso && (
-            <div>
-              <dt className="text-xs uppercase tracking-wide text-gray">Peso</dt>
-              <dd className="text-ink mt-0.5">{peca.peso}</dd>
-            </div>
-          )}
           {peca.referencia && (
             <div>
               <dt className="text-xs uppercase tracking-wide text-gray">Referência</dt>

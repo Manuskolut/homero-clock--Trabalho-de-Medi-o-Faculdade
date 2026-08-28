@@ -9,7 +9,7 @@ type PecaCardData = {
   nome: string;
   categoria: string;
   codigoBarras: string;
-  preco: number;
+  preco: number | null;
   status: string;
   fotoUrl?: string | null;
 };

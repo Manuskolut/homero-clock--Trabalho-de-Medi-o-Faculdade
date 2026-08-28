@@ -153,7 +153,9 @@ model Peca {
   id           String @id @default(cuid())
   nome         String
   descricao    String?
-  preco        Float
+  // Opcional só para Joia (preço pode ser decidido depois) — obrigatório
+  // (validado no Zod) para Folheado e Relógio.
+  preco        Float?
   // Sequencial global (não por loja — qualquer loja pode dar baixa em
   // qualquer peça), zero-padded, gerado atomicamente (mesmo princípio do
   // numeroOS: transação + retry em colisão). Guardado já formatado porque a
@@ -161,9 +163,6 @@ model Peca {
   codigoBarras String @unique
 
   categoria CategoriaPeca
-  // Texto livre (ex: "3g"), mesmo padrão do peso de peça de joia nas OS —
-  // só preenchido quando categoria é JOIA ou FOLHEADO.
-  peso      String?
   // Só dígitos (validado no Zod), mas guardado como texto — só preenchido
   // quando categoria é RELOGIO. String (não Int) de propósito: permite busca
   // por trecho ("contains") e preserva zeros à esquerda.

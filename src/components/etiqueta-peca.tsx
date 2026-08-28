@@ -14,13 +14,18 @@ export function EtiquetaPeca({
   referencia,
 }: {
   nome: string;
-  preco: number;
+  preco: number | null;
   codigoBarras: string;
   categoria: CategoriaPeca;
   referencia?: string | null;
 }) {
   const mostrarReferencia = categoria === "RELOGIO" && !!referencia;
   const mostrarNome = categoria === "JOIA" || categoria === "FOLHEADO";
+  // Joia sem valor definido: não sobra nada pra mostrar na linha do preço,
+  // então o nome ocupa o verso inteiro (em vez de dividir espaço com uma
+  // linha de valor vazia). Folheado sempre tem preço obrigatório, então
+  // nunca cai nesse caso.
+  const nomeOcupaVerso = categoria === "JOIA" && preco == null;
 
   return (
     <div className="mx-auto flex w-[60mm] h-[15mm] bg-white text-ink overflow-hidden print:shadow-none">
@@ -36,14 +41,22 @@ export function EtiquetaPeca({
         />
       </div>
       <div className="flex flex-col w-[30mm] h-[15mm] items-center justify-center gap-0.5 border-l border-dashed border-ink/30">
-        {mostrarNome && (
-          <span className="w-full px-1 line-clamp-2 text-center text-[8px] leading-tight">
+        {nomeOcupaVerso ? (
+          <span className="w-full h-full px-1.5 flex items-center justify-center text-center text-[10px] leading-tight line-clamp-4">
             {nome}
           </span>
-        )}
-        <span className="font-mono font-bold text-[13px]">{formatarMoeda(preco)}</span>
-        {mostrarReferencia && (
-          <span className="font-mono text-[10px]">REF: {referencia}</span>
+        ) : (
+          <>
+            {mostrarNome && (
+              <span className="w-full px-1 line-clamp-2 text-center text-[8px] leading-tight">
+                {nome}
+              </span>
+            )}
+            <span className="font-mono font-bold text-[13px]">{formatarMoeda(preco)}</span>
+            {mostrarReferencia && (
+              <span className="font-mono text-[10px]">REF: {referencia}</span>
+            )}
+          </>
         )}
       </div>
     </div>

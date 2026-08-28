@@ -14,7 +14,7 @@ type ItemVendido = {
   key: number;
   nome: string;
   codigoBarras: string;
-  preco: number;
+  preco: number | null;
   ok: true;
 };
 

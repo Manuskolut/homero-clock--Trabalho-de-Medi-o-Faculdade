@@ -5,7 +5,6 @@ import { TextField, TextAreaField, SelectField } from "@/components/ui/field";
 import { Button } from "@/components/ui/button";
 import {
   CATEGORIA_PECA_OPTIONS,
-  CATEGORIAS_COM_PESO,
   CATEGORIAS_COM_REFERENCIA,
   CATEGORIAS_COM_NOME_NA_ETIQUETA,
   NOME_PECA_ETIQUETA_MAX,
@@ -87,9 +86,6 @@ export function PecaForm({
   const [state, formAction, isPending] = useActionState(acaoComTratamentoDeErro, initialState);
   const [categoria, setCategoria] = useState<Categoria | null>(null);
   const [nome, setNome] = useState("");
-  const mostrarPeso = categoria
-    ? (CATEGORIAS_COM_PESO as readonly string[]).includes(categoria)
-    : false;
   const mostrarReferencia = categoria
     ? (CATEGORIAS_COM_REFERENCIA as readonly string[]).includes(categoria)
     : false;
@@ -147,36 +143,24 @@ export function PecaForm({
             placeholder="Detalhes adicionais da peça…"
           />
           <TextField
-            label="Preço"
+            label={categoria === "JOIA" ? "Preço (opcional)" : "Preço"}
             name="preco"
             type="number"
             step="0.01"
             min="0"
-            required
+            required={categoria !== "JOIA"}
             error={state.errors?.preco}
             placeholder="Ex: 89.90"
           />
-          {(mostrarPeso || mostrarReferencia) && (
-            <div className="grid sm:grid-cols-2 gap-5">
-              {mostrarPeso && (
-                <TextField
-                  label="Peso (opcional)"
-                  name="peso"
-                  error={state.errors?.peso}
-                  placeholder="Ex: 3g"
-                />
-              )}
-              {mostrarReferencia && (
-                <TextField
-                  label="Referência (opcional)"
-                  name="referencia"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  error={state.errors?.referencia}
-                  placeholder="Ex: 12345"
-                />
-              )}
-            </div>
+          {mostrarReferencia && (
+            <TextField
+              label="Referência (opcional)"
+              name="referencia"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              error={state.errors?.referencia}
+              placeholder="Ex: 12345"
+            />
           )}
           <div className="flex flex-col gap-1.5">
             <label htmlFor="foto" className="text-sm font-medium text-ink">
