@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display, Antonio } from "next/font/google";
+import { Inter, Playfair_Display, Antonio, Barlow_Condensed } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/header";
 import { SiteFooter } from "@/components/site-footer";
@@ -20,6 +20,15 @@ const antonio = Antonio({
   weight: ["500", "600", "700"],
 });
 
+// Usada só nos números grandes dos cards de estatística do painel (StatCard)
+// — condensada, pra ficar mais compacta que a fonte serifada usada no resto
+// do sistema. Peso normal (sem negrito).
+const barlowCondensed = Barlow_Condensed({
+  variable: "--font-barlow-condensed",
+  subsets: ["latin"],
+  weight: ["400"],
+});
+
 export const metadata: Metadata = {
   title: "Homero Clock Relojóias — Gestão de Ordens de Serviço",
   description:
@@ -34,7 +43,7 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`${inter.variable} ${playfair.variable} ${antonio.variable} h-full antialiased`}
+      className={`${inter.variable} ${playfair.variable} ${antonio.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
         <Header />

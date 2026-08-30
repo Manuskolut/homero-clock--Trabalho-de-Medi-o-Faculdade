@@ -26,6 +26,7 @@
   --font-sans: var(--font-inter);
   --font-serif: var(--font-playfair);
   --font-heading: var(--font-antonio);
+  --font-numeric: var(--font-barlow-condensed);
 }
 
 body {

@@ -5,6 +5,14 @@ import {
 } from "@/lib/actions/ordens";
 import { listarLojasSelecionaveis } from "@/lib/actions/lojas";
 import { StatCard, Card } from "@/components/ui/card";
+import {
+  InboxIcon,
+  ClockAlertIcon,
+  CalendarIcon,
+  TrayInIcon,
+  CheckCircleIcon,
+  WrenchOffIcon,
+} from "@/components/icons/stat-icons";
 import { GraficoOrdensCard } from "@/components/grafico-ordens-card";
 import { StatusBadge, AtrasadaBadge } from "@/components/ui/badge";
 import { LojaBadge } from "@/components/loja-badge";
@@ -81,29 +89,77 @@ export default async function DashboardPage({
       {/* Mobile (abaixo de sm): carrossel com scroll-snap em 2 "páginas" de 2x2. */}
       <div className="sm:hidden flex overflow-x-auto snap-x snap-mandatory -mx-4 px-4 gap-4">
         <div className="shrink-0 w-full snap-start grid grid-cols-2 gap-4">
-          <StatCard label="Em aberto" value={stats.emAberto} />
-          <StatCard label="Atrasadas" value={stats.atrasadas} />
-          <StatCard label="Próxima semana" value={stats.previstasSemana} />
-          <StatCard label="OS entradas este mês" value={stats.osEsteMes} />
+          <StatCard
+            label="Em aberto"
+            value={stats.emAberto}
+            icon={<InboxIcon className="h-5 w-5" />}
+          />
+          <StatCard
+            label="Atrasadas"
+            value={stats.atrasadas}
+            icon={<ClockAlertIcon className="h-5 w-5" />}
+          />
+          <StatCard
+            label="Próxima semana"
+            value={stats.previstasSemana}
+            icon={<CalendarIcon className="h-5 w-5" />}
+          />
+          <StatCard
+            label="OS entradas este mês"
+            value={stats.osEsteMes}
+            icon={<TrayInIcon className="h-5 w-5" />}
+          />
         </div>
         <div className="shrink-0 w-full snap-start grid grid-cols-2 gap-4">
           <div className="col-start-1">
-            <StatCard label="Encerradas no mês" value={stats.encerradasMes} />
+            <StatCard
+              label="Encerradas no mês"
+              value={stats.encerradasMes}
+              icon={<CheckCircleIcon className="h-5 w-5" />}
+            />
           </div>
           <div className="col-start-1">
-            <StatCard label="Sem conserto (mês)" value={stats.semConsertoMes} />
+            <StatCard
+              label="Sem conserto (mês)"
+              value={stats.semConsertoMes}
+              icon={<WrenchOffIcon className="h-5 w-5" />}
+            />
           </div>
         </div>
       </div>
 
       {/* Tablet/desktop (sm+): os 6 cards juntos, sem paginação. */}
       <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard label="Em aberto" value={stats.emAberto} />
-        <StatCard label="Atrasadas" value={stats.atrasadas} />
-        <StatCard label="Próxima semana" value={stats.previstasSemana} />
-        <StatCard label="OS entradas este mês" value={stats.osEsteMes} />
-        <StatCard label="Encerradas no mês" value={stats.encerradasMes} />
-        <StatCard label="Sem conserto (mês)" value={stats.semConsertoMes} />
+        <StatCard
+          label="Em aberto"
+          value={stats.emAberto}
+          icon={<InboxIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Atrasadas"
+          value={stats.atrasadas}
+          icon={<ClockAlertIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Próxima semana"
+          value={stats.previstasSemana}
+          icon={<CalendarIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="OS entradas este mês"
+          value={stats.osEsteMes}
+          icon={<TrayInIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Encerradas no mês"
+          value={stats.encerradasMes}
+          icon={<CheckCircleIcon className="h-5 w-5" />}
+        />
+        <StatCard
+          label="Sem conserto (mês)"
+          value={stats.semConsertoMes}
+          icon={<WrenchOffIcon className="h-5 w-5" />}
+        />
       </div>
 
       <div className="grid lg:grid-cols-5 gap-6">
