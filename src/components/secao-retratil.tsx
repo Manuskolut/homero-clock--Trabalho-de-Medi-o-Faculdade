@@ -134,7 +134,7 @@ export function SecaoRetratil({
                         {formatarMoeda(ordem.valorOrcado)}
                       </td>
                       <td className="px-5 py-3">
-                        {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} />}
+                        {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />}
                       </td>
                       {isAdmin && (
                         <td className="px-5 py-3">

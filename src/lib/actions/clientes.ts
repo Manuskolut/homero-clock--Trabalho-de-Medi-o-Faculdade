@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { clienteSchema } from "@/lib/validation";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { verifySession, resolverLojaAlvo, temAcesso, filtroLoja } from "@/lib/dal";
+import { verifySession, resolverLojaAlvo, temAcesso, filtroLoja, requireAdmin } from "@/lib/dal";
 
 export type ActionState = {
   ok: boolean;
@@ -86,6 +86,40 @@ export async function atualizarCliente(
   revalidatePath("/clientes");
   revalidatePath(`/clientes/${id}`);
   redirect(`/clientes/${id}`);
+}
+
+// Exclusão restrita ao Admin. Cliente.id é obrigatório em Ordem (FK
+// ON DELETE RESTRICT), então não dá pra apagar um cliente com ordens sem
+// apagar as ordens junto — por decisão explícita, o Admin pode excluir um
+// cliente mesmo com histórico, e isso apaga TODAS as ordens dele junto
+// (ação irreversível, diferente do soft-delete usado em excluirOrdem).
+export async function excluirCliente(id: string) {
+  const session = await requireAdmin();
+
+  const atual = await prisma.cliente.findUnique({
+    where: { id },
+    include: { _count: { select: { ordens: true } } },
+  });
+  if (!atual) {
+    throw new Error("Cliente não encontrado.");
+  }
+
+  if (atual._count.ordens > 0) {
+    console.warn(
+      `[auditoria] admin ${session.nome} (${session.userId}) excluiu o cliente ` +
+        `${atual.nome} (id ${atual.id}) e suas ${atual._count.ordens} ordem(ns) de serviço ` +
+        `vinculada(s) em ${new Date().toISOString()}`
+    );
+  }
+
+  await prisma.$transaction([
+    prisma.ordem.deleteMany({ where: { clienteId: id } }),
+    prisma.cliente.delete({ where: { id } }),
+  ]);
+
+  revalidatePath("/clientes");
+  revalidatePath("/ordens");
+  revalidatePath("/");
 }
 
 export async function buscarClientes(termo: string, lojaIdFiltro?: string) {

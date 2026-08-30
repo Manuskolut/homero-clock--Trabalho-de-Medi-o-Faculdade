@@ -147,7 +147,7 @@ function ColunaOficina({
                   <span className="text-sm font-heading font-semibold text-ink">
                     #{formatarNumeroOS(ordem.numeroOS)}
                   </span>
-                  {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} />}
+                  {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />}
                 </div>
                 <div className="text-sm text-ink truncate">{ordem.cliente.nome}</div>
                 {modelos && (

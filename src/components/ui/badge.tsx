@@ -3,12 +3,14 @@ import { clsx } from "clsx";
 
 export function StatusBadge({
   status,
+  tipoItem,
   size = "sm",
 }: {
   status: string;
+  tipoItem?: string;
   size?: "sm" | "lg";
 }) {
-  const c = corStatus(status);
+  const c = corStatus(status, tipoItem);
   return (
     <span
       className={clsx(

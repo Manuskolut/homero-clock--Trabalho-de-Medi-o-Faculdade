@@ -214,15 +214,22 @@ export function linhasPeca(peca: JoiaPeca, index: number): LinhasItem {
 
 // Cores de status ("vibrante controlada") — usadas em badges, gráficos e
 // acentos pontuais em todo o sistema. Sempre acompanhadas do par de texto com
-// melhor contraste sobre cada cor.
+// melhor contraste sobre cada cor. "Em conserto" não entra aqui: sua cor
+// depende do tipo do item (ver EM_CONSERTO_COLOR_HEX) — relógio e joia têm
+// cores diferentes pro mesmo status.
 export const STATUS_COLOR_HEX: Record<string, string> = {
   ATRASADAS: "#e72313",
-  RECEBIDO: "#009989",
   EM_ANALISE: "#ce1836",
-  EM_CONSERTO: "#e09400",
-  PRONTO_RETIRADA: "#00b05b",
+  PRONTO_RETIRADA: "#009989",
   SEM_CONSERTO: "#5e5e5e",
   ENTREGUE: "#141325",
+};
+
+// Cor de "Em conserto" por tipo de item — relógio usa verde escuro, joia
+// mantém o amarelo/âmbar original do status.
+export const EM_CONSERTO_COLOR_HEX: Record<string, string> = {
+  RELOGIO: "#075316",
+  JOIA: "#e09400",
 };
 
 // Cores por oficina destinada — tons/opacidades da cor de marca (dourado),
@@ -243,29 +250,38 @@ export const ESTADO_PECA_COLOR_HEX: Record<string, string> = {
   RUIM: "#B23A3A",
 };
 
-export function corStatus(status: string): { bg: string; text: string; dot: string } {
+// `tipoItem` só é usado (e só importa) para o status "Em conserto", que tem
+// cor diferente pra relógio e joia — ignorado nos demais status.
+export function corStatus(
+  status: string,
+  tipoItem?: string
+): { bg: string; text: string; dot: string } {
   switch (status) {
-    case "RECEBIDO":
-      return { bg: "bg-[#009989]", text: "text-white", dot: "bg-white" };
     case "EM_ANALISE":
       return { bg: "bg-[#ce1836]", text: "text-white", dot: "bg-white" };
     case "EM_CONSERTO":
-      return { bg: "bg-[#e09400]", text: "text-white", dot: "bg-white" };
+      return tipoItem === "RELOGIO"
+        ? { bg: "bg-[#075316]", text: "text-white", dot: "bg-white" }
+        : { bg: "bg-[#e09400]", text: "text-white", dot: "bg-white" };
     case "PRONTO_RETIRADA":
-      return { bg: "bg-[#00b05b]", text: "text-white", dot: "bg-white" };
+      return { bg: "bg-[#009989]", text: "text-white", dot: "bg-white" };
     case "SEM_CONSERTO":
       return { bg: "bg-[#5e5e5e]", text: "text-white", dot: "bg-white" };
     case "ENTREGUE":
       return { bg: "bg-[#141325]", text: "text-[#d2c48e]", dot: "bg-[#d2c48e]" };
     default:
-      return { bg: "bg-[#009989]", text: "text-white", dot: "bg-white" };
+      return { bg: "bg-[#ce1836]", text: "text-white", dot: "bg-white" };
   }
 }
 
 // Versão em hex "cru" das mesmas cores de corStatus(), para uso em estilos
 // inline (ex: fundo do <select> de status, que não aceita classes dinâmicas).
-export function corStatusInline(status: string): { bg: string; text: string } {
-  const bg = STATUS_COLOR_HEX[status] ?? STATUS_COLOR_HEX.RECEBIDO;
+export function corStatusInline(status: string, tipoItem?: string): { bg: string; text: string } {
+  if (status === "EM_CONSERTO") {
+    const bg = EM_CONSERTO_COLOR_HEX[tipoItem ?? "JOIA"] ?? EM_CONSERTO_COLOR_HEX.JOIA;
+    return { bg, text: "#ffffff" };
+  }
+  const bg = STATUS_COLOR_HEX[status] ?? STATUS_COLOR_HEX.EM_ANALISE;
   if (status === "ENTREGUE") return { bg, text: "#d2c48e" };
   return { bg, text: "#ffffff" };
 }

@@ -1,15 +1,30 @@
 "use client";
 
 import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
-import { STATUS_ORDEM_OPTIONS } from "@/lib/validation";
-import { STATUS_COLOR_HEX } from "@/lib/format";
+import { STATUS_COLOR_HEX, EM_CONSERTO_COLOR_HEX } from "@/lib/format";
 
 type ChartDatum = { status: string; key: string; total: number };
 
 // "Atrasadas" não é um status real (não existe no enum do banco) — é uma
-// categoria derivada (ver estaAtrasada) exibida só neste gráfico, por isso
-// não entra em STATUS_ORDEM_OPTIONS.
-const CATEGORIAS_GRAFICO = [{ value: "ATRASADAS", label: "Atrasadas" }, ...STATUS_ORDEM_OPTIONS];
+// categoria derivada (ver estaAtrasada) exibida só neste gráfico. "Em
+// conserto" tem cor diferente por tipo de item (relógio/joia), então vira
+// duas fatias próprias (EM_CONSERTO_RELOGIO/_JOIA) em vez de uma só — ver a
+// montagem de contagemPorStatus em estatisticasDashboard.
+const CATEGORIAS_GRAFICO = [
+  { value: "ATRASADAS", label: "Atrasadas" },
+  { value: "EM_ANALISE", label: "Em orçamento" },
+  { value: "EM_CONSERTO_RELOGIO", label: "Em conserto (Relógio)" },
+  { value: "EM_CONSERTO_JOIA", label: "Em conserto (Joia)" },
+  { value: "PRONTO_RETIRADA", label: "Pronto para retirada" },
+  { value: "SEM_CONSERTO", label: "Sem conserto" },
+  { value: "ENTREGUE", label: "Entregue / Encerrado" },
+];
+
+const COR_POR_CATEGORIA: Record<string, string> = {
+  ...STATUS_COLOR_HEX,
+  EM_CONSERTO_RELOGIO: EM_CONSERTO_COLOR_HEX.RELOGIO,
+  EM_CONSERTO_JOIA: EM_CONSERTO_COLOR_HEX.JOIA,
+};
 
 function Grafico({
   chartData,
@@ -41,7 +56,7 @@ function Grafico({
         labelLine={false}
       >
         {chartData.map((entry) => (
-          <Cell key={entry.key} fill={STATUS_COLOR_HEX[entry.key]} />
+          <Cell key={entry.key} fill={COR_POR_CATEGORIA[entry.key]} />
         ))}
       </Pie>
       <Tooltip

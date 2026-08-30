@@ -26,6 +26,21 @@ function somarDias(data: Date, dias: number) {
   return resultado;
 }
 
+// Status automático a partir de ter ou não valor orçado: com valor vira "Em
+// conserto", sem valor vira "Em orçamento". Só é aplicado na criação (status
+// atual nulo) e ao editar uma ordem que já está num desses dois status —
+// nunca sobrescreve "Sem conserto"/"Pronto para retirada"/"Entregue", que só
+// mudam por ação manual explícita (StatusSelect/alterarStatusOrdem).
+function statusAutomaticoPorValor(
+  statusAtual: StatusOrdem | null,
+  valorOrcado: number | null
+): StatusOrdem {
+  if (statusAtual && statusAtual !== "EM_ANALISE" && statusAtual !== "EM_CONSERTO") {
+    return statusAtual;
+  }
+  return valorOrcado != null ? "EM_CONSERTO" : "EM_ANALISE";
+}
+
 const CAMPOS_RELOGIO = [
   "modeloRelogio",
   "descricaoRelogio",
@@ -248,6 +263,7 @@ export async function criarOrdem(
   }
 
   const dataEntrada = new Date(parsed.data.dataEntrada);
+  const valorOrcado = parsed.data.valorOrcado ? Number(parsed.data.valorOrcado) : null;
 
   const { ordem, clienteEmail, lojaNome } = await criarOrdemComNumeroSequencial(
     lojaId,
@@ -262,7 +278,8 @@ export async function criarOrdem(
       dataPrevista: parsed.data.dataPrevista
         ? new Date(parsed.data.dataPrevista)
         : somarDias(dataEntrada, PRAZO_PADRAO_DIAS),
-      valorOrcado: parsed.data.valorOrcado ? Number(parsed.data.valorOrcado) : null,
+      valorOrcado,
+      status: statusAutomaticoPorValor(null, valorOrcado),
       sinal: parsed.data.sinal ? Number(parsed.data.sinal) : null,
       observacoes: parsed.data.observacoes || null,
       ...dadosEspecificosPorTipo(parsed.data),
@@ -315,6 +332,8 @@ export async function atualizarOrdem(
     return { ok: false, errors: flattenErrors(parsed.error) };
   }
 
+  const valorOrcado = parsed.data.valorOrcado ? Number(parsed.data.valorOrcado) : null;
+
   // O cliente da ordem não muda na edição — só é definido na criação
   // (nomeCliente/telefoneCliente vêm no form só pra satisfazer o schema
   // compartilhado com a criação; não são usados aqui).
@@ -324,7 +343,8 @@ export async function atualizarOrdem(
       tipoItem: parsed.data.tipoItem,
       dataEntrada: new Date(parsed.data.dataEntrada),
       dataPrevista: parsed.data.dataPrevista ? new Date(parsed.data.dataPrevista) : null,
-      valorOrcado: parsed.data.valorOrcado ? Number(parsed.data.valorOrcado) : null,
+      valorOrcado,
+      status: statusAutomaticoPorValor(atual.status, valorOrcado),
       sinal: parsed.data.sinal ? Number(parsed.data.sinal) : null,
       observacoes: parsed.data.observacoes || null,
       ...dadosEspecificosPorTipo(parsed.data),
@@ -693,15 +713,22 @@ export async function estatisticasDashboard(lojaIdFiltro?: string) {
           { status: "ENTREGUE", dataRetirada: { gte: inicioMes, lt: fimMes } },
         ],
       },
-      select: { status: true, dataPrevista: true },
+      select: { status: true, dataPrevista: true, tipoItem: true },
     }),
   ]);
 
   // Ordens atrasadas contam só na fatia "Atrasadas", não também no seu
   // status original (ver estaAtrasada — nunca é true para ordens finalizadas).
+  // "Em conserto" tem cor diferente por tipo de item (relógio/joia), então
+  // vira duas fatias próprias no gráfico (EM_CONSERTO_RELOGIO/_JOIA) em vez
+  // de uma só — ver StatusChart.
   const contagemPorStatus = new Map<string, number>();
   for (const o of ordensParaStatus) {
-    const chave = estaAtrasada(o.dataPrevista, o.status) ? "ATRASADAS" : o.status;
+    const chave = estaAtrasada(o.dataPrevista, o.status)
+      ? "ATRASADAS"
+      : o.status === "EM_CONSERTO"
+        ? `EM_CONSERTO_${o.tipoItem}`
+        : o.status;
     contagemPorStatus.set(chave, (contagemPorStatus.get(chave) ?? 0) + 1);
   }
   const porStatus = Array.from(contagemPorStatus, ([status, total]) => ({ status, total }));

@@ -169,7 +169,7 @@ export default async function BuscaPage({
                               {atrasada ? (
                                 <AtrasadaBadge />
                               ) : (
-                                <StatusBadge status={ordem.status} />
+                                <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />
                               )}
                             </td>
                             {isAdmin && (

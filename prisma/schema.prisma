@@ -69,7 +69,6 @@ enum TipoItem {
 }
 
 enum StatusOrdem {
-  RECEBIDO
   EM_ANALISE
   EM_CONSERTO
   PRONTO_RETIRADA
@@ -104,7 +103,10 @@ model Ordem {
   // descrição, tipo(s) de conserto, tamanho do aro e peso (quando aplicável)
   pecasJoia         Json?
 
-  status              StatusOrdem @default(RECEBIDO)
+  // Status é sempre definido explicitamente pelo código ao criar/editar a
+  // OS (ver criarOrdem/atualizarOrdem) — este default nunca deveria
+  // aparecer na prática, é só a obrigação do Prisma de ter um valor válido.
+  status              StatusOrdem @default(EM_ANALISE)
   // Momento em que o status virou "Sem conserto" — usado só para o KPI
   // mensal, já que dataRetirada fica nulo enquanto a ordem está aberta
   // (Sem conserto deixou de ser status final; a baixa formal é etapa à parte).

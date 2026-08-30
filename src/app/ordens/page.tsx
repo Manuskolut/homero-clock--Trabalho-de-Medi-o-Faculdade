@@ -170,7 +170,10 @@ export default async function OrdensPage({
               <OrdemCard
                 key={ordem.id}
                 ordem={ordem}
-                datas={[{ label: "Previsão", valor: ordem.dataPrevista }]}
+                datas={[
+                  { label: "Data de entrada", valor: ordem.dataEntrada },
+                  { label: "Previsão", valor: ordem.dataPrevista },
+                ]}
                 mostrarLoja={isAdmin}
               />
             ))}
@@ -183,6 +186,7 @@ export default async function OrdensPage({
                   <th className="px-5 py-3 font-medium">Cliente</th>
                   <th className="px-5 py-3 font-medium">Item</th>
                   <th className="px-5 py-3 font-medium">Oficina</th>
+                  <th className="px-5 py-3 font-medium">Data de entrada</th>
                   <th className="px-5 py-3 font-medium">Previsão</th>
                   <th className="px-5 py-3 font-medium">Valor</th>
                   <th className="px-5 py-3 font-medium">Status</th>
@@ -240,13 +244,16 @@ export default async function OrdensPage({
                         )}
                       </td>
                       <td className="px-5 py-3 text-gray whitespace-nowrap">
+                        {formatarData(ordem.dataEntrada)}
+                      </td>
+                      <td className="px-5 py-3 text-gray whitespace-nowrap">
                         {formatarData(ordem.dataPrevista)}
                       </td>
                       <td className="px-5 py-3 text-gray whitespace-nowrap">
                         {formatarMoeda(ordem.valorOrcado)}
                       </td>
                       <td className="px-5 py-3">
-                        {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} />}
+                        {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />}
                       </td>
                       {isAdmin && (
                         <td className="px-5 py-3">

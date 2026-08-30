@@ -211,6 +211,15 @@ export function ViaCliente(dados: DadosVia & { captura?: boolean }) {
       )}
       {vs.temSinal && <Linha label="Sinal" valor={vs.sinalFormatado} captura={captura} />}
       <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} captura={captura} />
+      {dados.observacoes && (
+        <>
+          <Separador />
+          <div>
+            <div className="text-ink/70 mb-1">Observações</div>
+            <div className="whitespace-pre-wrap">{dados.observacoes}</div>
+          </div>
+        </>
+      )}
       <Separador />
       <div className="border border-ink rounded px-2.5 py-2 text-center text-[13.75px] font-bold uppercase leading-snug">
         Este documento NÃO é nota fiscal

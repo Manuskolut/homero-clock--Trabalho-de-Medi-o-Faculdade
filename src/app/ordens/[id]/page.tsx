@@ -56,7 +56,11 @@ export default async function OrdemDetalhePage({
             <h1 className="text-3xl sm:text-4xl font-heading tracking-wide uppercase font-semibold text-gold">
               {ordem.loja.nome} nº {formatarNumeroOS(ordem.numeroOS)}
             </h1>
-            {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} />}
+            {atrasada ? (
+              <AtrasadaBadge />
+            ) : (
+              <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />
+            )}
           </div>
           <p className="text-sm text-gray mt-1">
             Cliente:{" "}
@@ -215,7 +219,7 @@ export default async function OrdemDetalhePage({
           <span
             className={clsx(
               "absolute inset-x-0 top-0 h-1.5",
-              atrasada ? "bg-[#E31717]" : corStatus(ordem.status).bg
+              atrasada ? "bg-[#E31717]" : corStatus(ordem.status, ordem.tipoItem).bg
             )}
           />
           <h2 className="text-sm font-heading tracking-wide font-semibold text-ink">
@@ -224,9 +228,14 @@ export default async function OrdemDetalhePage({
           {atrasada ? (
             <AtrasadaBadge size="lg" />
           ) : (
-            <StatusBadge status={ordem.status} size="lg" />
+            <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} size="lg" />
           )}
-          <StatusSelect id={ordem.id} status={ordem.status} somenteLeitura={somenteLeitura} />
+          <StatusSelect
+            id={ordem.id}
+            status={ordem.status}
+            tipoItem={ordem.tipoItem}
+            somenteLeitura={somenteLeitura}
+          />
           <div className="text-xs text-gray-light border-t border-gold-light/30 pt-3 mt-1">
             <div>Cadastrada em {formatarDataHora(ordem.createdAt)}</div>
             {somenteLeitura ? (

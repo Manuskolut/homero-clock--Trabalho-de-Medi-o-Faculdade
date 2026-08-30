@@ -31,7 +31,6 @@ export const TIPO_ITEM_OPTIONS = [
 ] as const;
 
 export const STATUS_ORDEM_OPTIONS = [
-  { value: "RECEBIDO", label: "Recebido" },
   { value: "EM_ANALISE", label: "Em orçamento" },
   { value: "EM_CONSERTO", label: "Em conserto" },
   { value: "PRONTO_RETIRADA", label: "Pronto para retirada" },

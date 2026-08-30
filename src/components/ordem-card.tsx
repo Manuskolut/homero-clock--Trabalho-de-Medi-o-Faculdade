@@ -48,7 +48,7 @@ export function OrdemCard({
     >
       <div className="flex items-center justify-between gap-2">
         <span className="font-medium text-ink">#{formatarNumeroOS(ordem.numeroOS)}</span>
-        {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} />}
+        {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />}
       </div>
 
       {ordem.cliente && (

@@ -2,10 +2,12 @@ import { obterClienteComHistorico } from "@/lib/actions/clientes";
 import { LinkButton } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { StatusBadge, AtrasadaBadge } from "@/components/ui/badge";
+import { ExcluirClienteButton } from "@/components/excluir-cliente-button";
 import { formatarData, formatarMoeda, formatarNumeroOS, estaAtrasada } from "@/lib/format";
 import { ItemOrdemResumo } from "@/components/item-ordem-resumo";
 import { OrdemCard } from "@/components/ordem-card";
 import { BackButton } from "@/components/ui/back-button";
+import { getOptionalSession } from "@/lib/dal";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { clsx } from "clsx";
@@ -20,6 +22,9 @@ export default async function ClienteDetalhePage({
   const { id } = await params;
   const cliente = await obterClienteComHistorico(id);
   if (!cliente) notFound();
+
+  const session = await getOptionalSession();
+  const isAdmin = session?.tipo === "ADMIN";
 
   return (
     <div className="flex flex-col gap-6">
@@ -46,6 +51,13 @@ export default async function ClienteDetalhePage({
           <LinkButton href={`/clientes/${cliente.id}/editar`} variant="secondary">
             Editar cliente
           </LinkButton>
+          {isAdmin && (
+            <ExcluirClienteButton
+              id={cliente.id}
+              nome={cliente.nome}
+              totalOrdens={cliente.ordens.length}
+            />
+          )}
         </div>
       </div>
 
@@ -121,7 +133,7 @@ export default async function ClienteDetalhePage({
                           {formatarMoeda(ordem.valorOrcado)}
                         </td>
                         <td className="px-5 py-3">
-                          {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} />}
+                          {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />}
                         </td>
                       </tr>
                     );

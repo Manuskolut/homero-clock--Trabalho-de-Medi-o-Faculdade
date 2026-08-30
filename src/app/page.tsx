@@ -170,7 +170,7 @@ export default async function DashboardPage({
                     {estaAtrasada(ordem.dataPrevista, ordem.status) ? (
                       <AtrasadaBadge />
                     ) : (
-                      <StatusBadge status={ordem.status} />
+                      <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />
                     )}
                     <span className="text-xs text-gray-light">
                       {formatarData(ordem.dataPrevista)}

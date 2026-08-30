@@ -10,15 +10,17 @@ import type { StatusOrdem } from "@prisma/client";
 export function StatusSelect({
   id,
   status,
+  tipoItem,
   somenteLeitura,
 }: {
   id: string;
   status: string;
+  tipoItem?: string;
   somenteLeitura: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
-  const { bg, text } = corStatusInline(status);
+  const { bg, text } = corStatusInline(status, tipoItem);
 
   return (
     <select
