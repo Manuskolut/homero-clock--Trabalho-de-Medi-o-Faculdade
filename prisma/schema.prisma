@@ -13,6 +13,9 @@ datasource db {
 model Loja {
   id        String   @id // slug fixo: "mueller" | "jockey" | "patio-batel" | "legado"
   nome      String   @unique
+  // Telefone de contato exibido na Via do Cliente — editável só por Admin
+  // (ver /admin/lojas). Vazio até ser preenchido (ex: loja "legado").
+  telefone  String   @default("")
   ativa     Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -93,6 +96,18 @@ model Ordem {
   valorOrcado      Float? // opcional no cadastro; exigido ao dar baixa
   sinal            Float? // opcional, independente do valorOrcado — valor único por OS inteira
   observacoes      String?
+
+  // Nome (normalmente só o primeiro) de quem atendeu na criação da OS —
+  // imutável após criada (não reenviado na edição). Exibido só na Via da
+  // Loja. OSs criadas antes deste campo existir ficam com string vazia.
+  nomeAtendente String @default("")
+  // true quando o atendente digitou a data prometida na criação; false
+  // quando ficou em branco e foi calculada automaticamente (+PRAZO_PADRAO_DIAS).
+  // Controla se o campo "Urgente" aparece na Via da Loja (só aparece quando
+  // false, ou seja, quando o prazo foi o automático). Recalculado a cada
+  // edição da OS. OSs criadas antes deste campo existir ficam com false
+  // (mesmo comportamento visual que já tinham: "Urgente" sempre aparecia).
+  dataPrometidaManual Boolean @default(false)
 
   // Específico do fluxo Relógio — lista de até 6 relógios, cada um com seus
   // próprios dados técnicos (modelo, tipo, pulseira, estado das peças na entrada)

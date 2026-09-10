@@ -49,6 +49,8 @@ export function OrdemForm({
     /** Modo edição: cliente vira somente leitura, mostrado a partir destes valores. */
     clienteNomeAtual?: string;
     clienteTelefoneAtual?: string;
+    /** Modo edição: nome do atendente já salvo (imutável, vai como campo oculto). */
+    nomeAtendenteAtual?: string;
   };
   cancelHref: string;
 }) {
@@ -331,6 +333,22 @@ export function OrdemForm({
             error={state.errors?.observacoes}
             placeholder="Observações adicionais (opcional)…"
           />
+
+          {isEdicao ? (
+            <input
+              type="hidden"
+              name="nomeAtendente"
+              value={defaultValues?.nomeAtendenteAtual ?? ""}
+            />
+          ) : (
+            <TextField
+              label="Nome do atendente (primeiro nome)"
+              name="nomeAtendente"
+              required
+              error={state.errors?.nomeAtendente}
+              placeholder="Ex: João"
+            />
+          )}
         </>
       )}
 

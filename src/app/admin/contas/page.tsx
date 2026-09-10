@@ -27,7 +27,12 @@ export default async function ContasPage() {
             Contas de loja e de administrador com acesso ao sistema.
           </p>
         </div>
-        <LinkButton href="/admin/contas/novo">+ Nova conta admin</LinkButton>
+        <div className="flex gap-3">
+          <LinkButton href="/admin/lojas" variant="secondary">
+            Configurações de loja
+          </LinkButton>
+          <LinkButton href="/admin/contas/novo">+ Nova conta admin</LinkButton>
+        </div>
       </div>
 
       <Card className="overflow-hidden">

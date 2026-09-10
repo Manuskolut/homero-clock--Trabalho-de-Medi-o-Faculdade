@@ -176,6 +176,9 @@ const camposComuns = {
       message: "Informe um sinal válido",
     }),
   observacoes: z.string().trim().optional(),
+  // Imutável após a criação — no formulário de edição vem como campo
+  // oculto com o valor já salvo, só pra satisfazer este schema compartilhado.
+  nomeAtendente: z.string().trim().min(1, "Informe o nome do atendente"),
 };
 
 export const ordemRelogioSchema = z.object({

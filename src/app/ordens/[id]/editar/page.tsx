@@ -53,6 +53,7 @@ export default async function EditarOrdemPage({
           pecasJoia: parsePecasJoia(ordem.pecasJoia),
           clienteNomeAtual: ordem.cliente.nome,
           clienteTelefoneAtual: ordem.cliente.telefone,
+          nomeAtendenteAtual: ordem.nomeAtendente,
         }}
       />
     </FormPage>

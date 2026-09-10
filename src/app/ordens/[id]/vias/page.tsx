@@ -20,6 +20,7 @@ export default async function ViasOrdemPage({
   const dados = {
     numeroOS: ordem.numeroOS,
     lojaNome: ordem.loja.nome,
+    lojaTelefone: ordem.loja.telefone,
     clienteNome: ordem.cliente.nome,
     clienteTelefone: ordem.cliente.telefone,
     clienteEmail: ordem.cliente.email,
@@ -31,6 +32,8 @@ export default async function ViasOrdemPage({
     custoOurives: ordem.custoOurives,
     observacoes: ordem.observacoes,
     oficina: ordem.oficina,
+    nomeAtendente: ordem.nomeAtendente,
+    dataPrometidaManual: ordem.dataPrometidaManual,
     relogios: parseRelogiosDetalhes(ordem.relogiosDetalhes),
     pecasJoia: parsePecasJoia(ordem.pecasJoia),
   };

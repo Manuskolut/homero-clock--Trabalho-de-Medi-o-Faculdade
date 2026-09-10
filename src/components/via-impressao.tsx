@@ -14,6 +14,7 @@ import {
 export type DadosVia = {
   numeroOS: number;
   lojaNome: string;
+  lojaTelefone: string;
   clienteNome: string;
   clienteTelefone: string;
   clienteEmail: string | null;
@@ -25,6 +26,8 @@ export type DadosVia = {
   custoOurives: number | null;
   observacoes: string | null;
   oficina: string | null;
+  nomeAtendente: string;
+  dataPrometidaManual: boolean;
   relogios: RelogioDetalhe[];
   pecasJoia: JoiaPeca[];
 };
@@ -37,13 +40,16 @@ function Linha({
   label,
   valor,
   captura = false,
+  fontClassName = "",
 }: {
   label: string;
   valor: string;
   captura?: boolean;
+  /** Sobrescreve o tamanho de fonte padrão da via (15.625px) pro rótulo e valor desta linha. */
+  fontClassName?: string;
 }) {
   return (
-    <div className="flex justify-between gap-3">
+    <div className={`flex justify-between gap-3 ${fontClassName}`}>
       <span className="text-ink/70 shrink-0 whitespace-nowrap">{label}</span>
       <span
         className={
@@ -93,11 +99,14 @@ function CabecalhoVia({
   lojaNome,
   rotulo,
   mostrarUrgente = false,
+  lojaNomeClassName = "text-sm",
 }: {
   numeroOS: number;
   lojaNome: string;
   rotulo: string;
   mostrarUrgente?: boolean;
+  /** Via da Loja usa uma fonte 18% maior no nome da loja do que a Via do Cliente. */
+  lojaNomeClassName?: string;
 }) {
   return (
     <div className="flex flex-col items-center text-center">
@@ -108,7 +117,7 @@ function CabecalhoVia({
         className="via-logo h-[70px] w-auto object-contain"
       />
       <div className="w-full flex items-baseline justify-between mt-3">
-        <span className="text-sm font-bold uppercase">{lojaNome}</span>
+        <span className={`${lojaNomeClassName} font-bold uppercase`}>{lojaNome}</span>
         <span className="text-[20.8px] font-bold">OS Nº {formatarNumeroOS(numeroOS)}</span>
       </div>
       {mostrarUrgente && (
@@ -124,23 +133,32 @@ function CabecalhoVia({
   );
 }
 
-// Linha-resumo do estado das peças do relógio na entrada (ex: "Caixa: Bom |
-// Pulseira: Regular | Vidro: Ruim | Mostrador: Bom") — mantida no tamanho de
-// fonte original (menor que o resto da via), pra não competir visualmente
-// com o restante do conteúdo. Espelha a mesma lógica de linhasRelogio() em
+// Estado das peças do relógio na entrada, em duas linhas fixas (Caixa/
+// Pulseira em cima, Vidro/Mostrador embaixo — ex: "Caixa: Bom | Pulseira:
+// Regular" / "Vidro: Ruim | Mostrador: Bom") — mantidas no tamanho de fonte
+// original (menor que o resto da via), pra não competir visualmente com o
+// restante do conteúdo. Espelha a mesma lógica de linhasRelogio() em
 // @/lib/format, mas calculada à parte pra poder receber esse estilo próprio
 // sem alterar a função compartilhada com o e-mail automático.
-function estadoRelogioLinha(relogio: RelogioDetalhe): string | null {
-  const estados = [
+function montarLinhaEstado(campos: [string, string | null][]): string | null {
+  return (
+    campos
+      .filter(([, valor]) => valor)
+      .map(([campo, valor]) => `${campo}: ${valor}`)
+      .join(" | ") || null
+  );
+}
+
+function estadoRelogioLinhas(relogio: RelogioDetalhe): [string | null, string | null] {
+  const linhaCima = montarLinhaEstado([
     ["Caixa", labelEstadoPeca(relogio.estadoCaixa)],
     ["Pulseira", labelEstadoPeca(relogio.estadoPulseira)],
+  ]);
+  const linhaBaixo = montarLinhaEstado([
     ["Vidro", labelEstadoPeca(relogio.estadoVidro)],
     ["Mostrador", labelEstadoPeca(relogio.estadoMostrador)],
-  ]
-    .filter(([, valor]) => valor)
-    .map(([campo, valor]) => `${campo}: ${valor}`)
-    .join(" | ");
-  return estados || null;
+  ]);
+  return [linhaCima, linhaBaixo];
 }
 
 function BlocoRelogios({
@@ -154,14 +172,17 @@ function BlocoRelogios({
     <div className="flex flex-col gap-2.5">
       {relogios.map((relogio, i) => {
         const { titulo, linhas } = linhasRelogio(relogio, i, false);
-        const estadoLinha = mostrarEstados ? estadoRelogioLinha(relogio) : null;
+        const [estadoCima, estadoBaixo] = mostrarEstados
+          ? estadoRelogioLinhas(relogio)
+          : [null, null];
         return (
           <div key={i}>
             <div className="font-bold">{titulo}</div>
             {linhas.map((linha, j) => (
               <div key={j}>{linha}</div>
             ))}
-            {estadoLinha && <div className="text-[12.5px]">{estadoLinha}</div>}
+            {estadoCima && <div className="text-[12.5px]">{estadoCima}</div>}
+            {estadoBaixo && <div className="text-[12.5px]">{estadoBaixo}</div>}
           </div>
         );
       })}
@@ -221,7 +242,15 @@ export function ViaCliente(dados: DadosVia & { captura?: boolean }) {
         </>
       )}
       <Separador />
-      <div className="border border-ink rounded px-2.5 py-2 text-center text-[13.75px] font-bold uppercase leading-snug">
+      {dados.lojaTelefone && (
+        <Linha
+          label="Contato da loja"
+          valor={dados.lojaTelefone}
+          captura={captura}
+          fontClassName="text-[12.5px]"
+        />
+      )}
+      <div className="border border-ink rounded px-2.5 py-2 text-center text-[13.75px] font-bold uppercase leading-snug mt-2.5">
         Este documento NÃO é nota fiscal
         <br />e não tem valor fiscal
       </div>
@@ -238,7 +267,8 @@ export function ViaLoja(dados: DadosVia & { captura?: boolean }) {
         numeroOS={dados.numeroOS}
         lojaNome={dados.lojaNome}
         rotulo="Via Loja"
-        mostrarUrgente
+        mostrarUrgente={!dados.dataPrometidaManual}
+        lojaNomeClassName="text-[16.52px]"
       />
       <Separador />
       <Linha label="Cliente" valor={dados.clienteNome} captura={captura} />
@@ -292,6 +322,14 @@ export function ViaLoja(dados: DadosVia & { captura?: boolean }) {
         valor={formatarData(dados.dataPrevista)}
         captura={captura}
       />
+      {dados.nomeAtendente && (
+        <Linha
+          label="Atendente"
+          valor={dados.nomeAtendente}
+          captura={captura}
+          fontClassName="text-[13.453125px]"
+        />
+      )}
       {dados.observacoes && (
         <>
           <Separador />

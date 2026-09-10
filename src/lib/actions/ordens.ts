@@ -126,6 +126,7 @@ function parseOrdemForm(formData: FormData) {
     valorOrcado: String(formData.get("valorOrcado") ?? ""),
     sinal: String(formData.get("sinal") ?? ""),
     observacoes: String(formData.get("observacoes") ?? ""),
+    nomeAtendente: String(formData.get("nomeAtendente") ?? ""),
   };
 
   if (tipoItem === "JOIA") {
@@ -278,10 +279,15 @@ export async function criarOrdem(
       dataPrevista: parsed.data.dataPrevista
         ? new Date(parsed.data.dataPrevista)
         : somarDias(dataEntrada, PRAZO_PADRAO_DIAS),
+      // Marca se a data prometida foi digitada pelo atendente (true) ou
+      // calculada pelo sistema (false) — controla o campo "Urgente" na Via
+      // da Loja (só aparece quando calculada automaticamente).
+      dataPrometidaManual: !!parsed.data.dataPrevista,
       valorOrcado,
       status: statusAutomaticoPorValor(null, valorOrcado),
       sinal: parsed.data.sinal ? Number(parsed.data.sinal) : null,
       observacoes: parsed.data.observacoes || null,
+      nomeAtendente: parsed.data.nomeAtendente,
       ...dadosEspecificosPorTipo(parsed.data),
     }
   );
@@ -336,13 +342,15 @@ export async function atualizarOrdem(
 
   // O cliente da ordem não muda na edição — só é definido na criação
   // (nomeCliente/telefoneCliente vêm no form só pra satisfazer o schema
-  // compartilhado com a criação; não são usados aqui).
+  // compartilhado com a criação; não são usados aqui). nomeAtendente segue
+  // a mesma regra (vem como campo oculto no form, também não é usado aqui).
   await prisma.ordem.update({
     where: { id },
     data: {
       tipoItem: parsed.data.tipoItem,
       dataEntrada: new Date(parsed.data.dataEntrada),
       dataPrevista: parsed.data.dataPrevista ? new Date(parsed.data.dataPrevista) : null,
+      dataPrometidaManual: !!parsed.data.dataPrevista,
       valorOrcado,
       status: statusAutomaticoPorValor(atual.status, valorOrcado),
       sinal: parsed.data.sinal ? Number(parsed.data.sinal) : null,

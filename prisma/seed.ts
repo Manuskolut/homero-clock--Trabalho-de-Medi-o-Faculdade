@@ -14,16 +14,16 @@ function requireEnv(nome: string): string {
 }
 
 const LOJAS = [
-  { id: "mueller", nome: "Mueller" },
-  { id: "jockey", nome: "Jockey" },
-  { id: "patio-batel", nome: "Pátio Batel" },
+  { id: "mueller", nome: "Mueller", telefone: "(41) 99685-0427" },
+  { id: "jockey", nome: "Jockey", telefone: "(41) 99245-4077" },
+  { id: "patio-batel", nome: "Pátio Batel", telefone: "(41) 99757-0036" },
 ];
 
 async function main() {
   for (const loja of LOJAS) {
     await prisma.loja.upsert({
       where: { id: loja.id },
-      update: { nome: loja.nome },
+      update: { nome: loja.nome, telefone: loja.telefone },
       create: loja,
     });
   }
