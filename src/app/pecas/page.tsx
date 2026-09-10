@@ -8,6 +8,7 @@ import { LojaFiltro } from "@/components/loja-filtro";
 import { CategoriaFiltro } from "@/components/categoria-filtro";
 import { BuscaPecaFiltro } from "@/components/busca-peca-filtro";
 import { PecaCard } from "@/components/peca-card";
+import { PecaThumb } from "@/components/peca-thumb";
 import { BackButton } from "@/components/ui/back-button";
 import { formatarData, formatarMoeda, labelCategoriaPeca } from "@/lib/format";
 import { getOptionalSession, podeCadastrarPecas, podeConfirmarRecebimentoPecas } from "@/lib/dal";
@@ -101,6 +102,7 @@ export default async function PecasPage({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gold-light/40 text-left text-xs uppercase tracking-wide text-gray">
+                  <th className="pl-5 pr-2 py-3 font-medium w-[52px]"></th>
                   <th className="px-5 py-3 font-medium">Nome</th>
                   <th className="px-5 py-3 font-medium">Categoria</th>
                   <th className="px-5 py-3 font-medium">Código de barras</th>
@@ -113,6 +115,9 @@ export default async function PecasPage({
               <tbody className="divide-y divide-gold-light/20">
                 {pecas.map((peca) => (
                   <tr key={peca.id} className="hover:bg-gold-light/10 transition-colors">
+                    <td className="pl-5 pr-2 py-3">
+                      <PecaThumb fotoUrl={peca.fotoUrl} nome={peca.nome} />
+                    </td>
                     <td className="px-5 py-3 font-medium">
                       <Link href={`/pecas/${peca.id}`} className="text-ink hover:text-gold">
                         {peca.nome}

@@ -8,6 +8,7 @@ import { DataVendaFiltro } from "@/components/data-venda-filtro";
 import { BuscaPecaFiltro } from "@/components/busca-peca-filtro";
 import { ReativarPecaButton } from "@/components/reativar-peca-button";
 import { PecaCard } from "@/components/peca-card";
+import { PecaThumb } from "@/components/peca-thumb";
 import { BackButton } from "@/components/ui/back-button";
 import {
   formatarData,
@@ -141,20 +142,23 @@ export default async function PecasVendidasPage({
               return (
                 <div key={peca.id} className="flex flex-col gap-2 px-5 py-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
-                    <Link href={`/pecas/${peca.id}`} className="group">
-                      <div className="font-medium text-ink group-hover:text-gold">{peca.nome}</div>
-                      <div className="text-xs text-gray-light font-mono mt-0.5">
-                        {peca.codigoBarras}
-                      </div>
-                      <div className="text-xs text-gray mt-0.5">
-                        {labelCategoriaPeca(peca.categoria)} · {formatarMoeda(peca.preco)} ·
-                        Vendida em {formatarData(peca.dataVenda)}
-                        {peca.lojaVenda && (
-                          <>
-                            {" · "}
-                            <LojaBadge nome={peca.lojaVenda.nome} />
-                          </>
-                        )}
+                    <Link href={`/pecas/${peca.id}`} className="group flex items-center gap-3">
+                      <PecaThumb fotoUrl={peca.fotoUrl} nome={peca.nome} />
+                      <div>
+                        <div className="font-medium text-ink group-hover:text-gold">{peca.nome}</div>
+                        <div className="text-xs text-gray-light font-mono mt-0.5">
+                          {peca.codigoBarras}
+                        </div>
+                        <div className="text-xs text-gray mt-0.5">
+                          {labelCategoriaPeca(peca.categoria)} · {formatarMoeda(peca.preco)} ·
+                          Vendida em {formatarData(peca.dataVenda)}
+                          {peca.lojaVenda && (
+                            <>
+                              {" · "}
+                              <LojaBadge nome={peca.lojaVenda.nome} />
+                            </>
+                          )}
+                        </div>
                       </div>
                     </Link>
                     {podeReativar ? (

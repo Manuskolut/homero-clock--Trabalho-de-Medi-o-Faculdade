@@ -6,6 +6,7 @@ import { LojaFiltro } from "@/components/loja-filtro";
 import { CategoriaFiltro } from "@/components/categoria-filtro";
 import { ConfirmarRecebimentoButton } from "@/components/confirmar-recebimento-button";
 import { PecaCard } from "@/components/peca-card";
+import { PecaThumb } from "@/components/peca-thumb";
 import { BackButton } from "@/components/ui/back-button";
 import { formatarData, formatarMoeda, labelCategoriaPeca } from "@/lib/format";
 import { requireConfirmacaoPecasPagina } from "@/lib/dal";
@@ -75,20 +76,23 @@ export default async function ConfirmarRecebimentoPage({
                 key={peca.id}
                 className="flex flex-wrap items-center justify-between gap-3 px-5 py-4"
               >
-                <Link href={`/pecas/${peca.id}`} className="group">
-                  <div className="font-medium text-ink group-hover:text-gold">{peca.nome}</div>
-                  <div className="text-xs text-gray-light font-mono mt-0.5">
-                    {peca.codigoBarras}
-                  </div>
-                  <div className="text-xs text-gray mt-0.5">
-                    {labelCategoriaPeca(peca.categoria)} · {formatarMoeda(peca.preco)} ·
-                    Cadastrada em {formatarData(peca.createdAt)}
-                    {isAdmin && (
-                      <>
-                        {" · "}
-                        <LojaBadge nome={peca.lojaDestino.nome} />
-                      </>
-                    )}
+                <Link href={`/pecas/${peca.id}`} className="group flex items-center gap-3">
+                  <PecaThumb fotoUrl={peca.fotoUrl} nome={peca.nome} />
+                  <div>
+                    <div className="font-medium text-ink group-hover:text-gold">{peca.nome}</div>
+                    <div className="text-xs text-gray-light font-mono mt-0.5">
+                      {peca.codigoBarras}
+                    </div>
+                    <div className="text-xs text-gray mt-0.5">
+                      {labelCategoriaPeca(peca.categoria)} · {formatarMoeda(peca.preco)} ·
+                      Cadastrada em {formatarData(peca.createdAt)}
+                      {isAdmin && (
+                        <>
+                          {" · "}
+                          <LojaBadge nome={peca.lojaDestino.nome} />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </Link>
                 <ConfirmarRecebimentoButton id={peca.id} nome={peca.nome} />
