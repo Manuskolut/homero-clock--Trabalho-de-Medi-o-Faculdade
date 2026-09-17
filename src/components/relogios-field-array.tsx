@@ -115,7 +115,10 @@ export function RelogiosFieldArray({
             </div>
 
             <div className="flex flex-col gap-2 pt-2 border-t border-gold-light/30">
-              <span className="text-xs text-gray-light">Estado das peças na entrada</span>
+              <span className="text-xs text-gray-light">
+                Estado das peças na entrada
+                <span className="text-gold ml-0.5">*</span>
+              </span>
               <div className="flex flex-col gap-2">
                 {PECAS_ESTADO.map(({ campo, label, Icone }) => (
                   <div

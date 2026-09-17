@@ -31,8 +31,11 @@ export type ResumoPorLoja = {
 };
 
 export type ResumoFinanceiroMes = {
-  /** Mês exibido/calculado, no formato "YYYY-MM" (já normalizado a partir do parâmetro recebido). */
+  /** Mês em que o ciclo COMEÇA, no formato "YYYY-MM" (é o nome usado pro ciclo, mesmo terminando no mês seguinte). */
   mes: string;
+  /** Datas (ISO, yyyy-mm-dd) do início e fim do ciclo — pra exibir o período exato na página. */
+  inicioCiclo: string;
+  fimCiclo: string;
   totalGeral: number;
   totalOrdens: number;
   totalPecas: number;
@@ -41,9 +44,22 @@ export type ResumoFinanceiroMes = {
   porLoja: ResumoPorLoja[];
 };
 
+// Ciclo de fechamento de caixa da loja: do dia 6 de um mês até o dia 5 do
+// mês seguinte (ex: 06/09 a 05/10) — não é o mês de calendário. O ciclo é
+// nomeado pelo mês em que começa (o ciclo 06/09-05/10 é "Setembro").
+function cicloContendo(data: Date): { ano: number; mesIndex: number } {
+  if (data.getDate() >= 6) return { ano: data.getFullYear(), mesIndex: data.getMonth() };
+  const mesAnterior = new Date(data.getFullYear(), data.getMonth() - 1, 1);
+  return { ano: mesAnterior.getFullYear(), mesIndex: mesAnterior.getMonth() };
+}
+
+function paraISO(data: Date): string {
+  return data.toISOString().slice(0, 10);
+}
+
 // Dinheiro recebido no período: soma o valor das OS "Entregue" (dataRetirada
-// dentro do mês) com o valor das peças "Vendida" (dataVenda dentro do mês).
-// "Cancelada" nunca entra — não é cobrado valor do cliente nesse caso.
+// dentro do ciclo) com o valor das peças "Vendida" (dataVenda dentro do
+// ciclo). "Cancelada" nunca entra — não é cobrado valor do cliente nesse caso.
 export async function resumoFinanceiroMes(
   mes?: string,
   lojaIdFiltro?: string
@@ -51,14 +67,15 @@ export async function resumoFinanceiroMes(
   const session = await verifySession();
   const lojaId = filtroLoja(session, lojaIdFiltro);
 
-  const hoje = new Date();
   const [anoStr, mesStr] = (mes ?? "").split("-");
-  const ano = anoStr && !Number.isNaN(Number(anoStr)) ? Number(anoStr) : hoje.getFullYear();
-  const mesIndex =
-    mesStr && !Number.isNaN(Number(mesStr)) ? Number(mesStr) - 1 : hoje.getMonth();
+  const informado =
+    anoStr && mesStr && !Number.isNaN(Number(anoStr)) && !Number.isNaN(Number(mesStr));
+  const { ano, mesIndex } = informado
+    ? { ano: Number(anoStr), mesIndex: Number(mesStr) - 1 }
+    : cicloContendo(new Date());
 
-  const inicioMes = new Date(ano, mesIndex, 1);
-  const fimMes = new Date(ano, mesIndex + 1, 1);
+  const inicioMes = new Date(ano, mesIndex, 6);
+  const fimMes = new Date(ano, mesIndex + 1, 6);
   const mesNormalizado = `${ano}-${String(mesIndex + 1).padStart(2, "0")}`;
 
   const [ordens, pecas] = await Promise.all([
@@ -131,6 +148,10 @@ export async function resumoFinanceiroMes(
 
   return {
     mes: mesNormalizado,
+    // Último dia do ciclo pra exibição é dia 5 (fimMes, usado na query, é o
+    // limite exclusivo = dia 6 do mês seguinte).
+    inicioCiclo: paraISO(inicioMes),
+    fimCiclo: paraISO(new Date(ano, mesIndex + 1, 5)),
     totalGeral: totalOrdens + totalPecas,
     totalOrdens,
     totalPecas,

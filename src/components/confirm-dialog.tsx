@@ -113,6 +113,7 @@ export function EncerrarOrdemDialog({
   lojaNome,
   clienteNome,
   clienteTelefone,
+  clienteEmail,
   tipoItem,
   relogios,
   pecasJoia,
@@ -133,6 +134,7 @@ export function EncerrarOrdemDialog({
   lojaNome: string;
   clienteNome: string;
   clienteTelefone: string;
+  clienteEmail: string | null;
   tipoItem: "RELOGIO" | "JOIA";
   relogios: RelogioDetalhe[];
   pecasJoia: JoiaPeca[];
@@ -152,7 +154,7 @@ export function EncerrarOrdemDialog({
   const [custoOurives, setCustoOurives] = useState("");
   const [nomeRetirada, setNomeRetirada] = useState("");
   const [cpfRetirada, setCpfRetirada] = useState("");
-  const [emailRetirada, setEmailRetirada] = useState("");
+  const [emailRetirada, setEmailRetirada] = useState(clienteEmail ?? "");
   const [confirmado, setConfirmado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [erroCpf, setErroCpf] = useState<string | null>(null);

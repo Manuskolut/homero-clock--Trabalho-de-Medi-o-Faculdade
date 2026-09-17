@@ -120,10 +120,12 @@ export const relogioDetalheSchema = z.object({
   descricao: z.string().trim().min(3, "Descreva o serviço deste relógio"),
   tipo: z.string().trim().optional(),
   pulseira: z.string().trim().optional(),
-  estadoCaixa: z.string().trim().optional(),
-  estadoPulseira: z.string().trim().optional(),
-  estadoVidro: z.string().trim().optional(),
-  estadoMostrador: z.string().trim().optional(),
+  // Obrigatórios só a partir de agora — OS antigas salvas sem esses campos
+  // continuam abrindo normalmente (validação só entra na criação/edição).
+  estadoCaixa: z.string().trim().min(1, "Informe o estado da caixa"),
+  estadoPulseira: z.string().trim().min(1, "Informe o estado da pulseira"),
+  estadoVidro: z.string().trim().min(1, "Informe o estado do vidro"),
+  estadoMostrador: z.string().trim().min(1, "Informe o estado do mostrador"),
 });
 
 export const joiaPecaSchema = z.object({

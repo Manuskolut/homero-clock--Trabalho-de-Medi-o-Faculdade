@@ -48,6 +48,19 @@ body {
   }
 }
 
+/* Remove as setinhas de incrementar/decrementar dos inputs numéricos em todo
+   o sistema (Chrome/Safari e Firefox) — só aparência, o campo continua
+   aceitando digitação/colagem normalmente. */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 /* Efeito "dourado metálico brilhante" — usado com moderação apenas no botão
    principal de ação. Gradiente entre dourado escuro/principal/claro com um
    realce que se desloca lentamente, simulando reflexo de luz em metal. A

@@ -49,7 +49,9 @@ export default async function FinanceiroPage({
             </h1>
           </div>
           <p className="text-sm text-gray mt-1">
-            {labelMes(resumo.mes)} — composição do total entre OS entregues e peças vendidas.
+            Ciclo {labelMes(resumo.mes)} ({formatarData(resumo.inicioCiclo)} a{" "}
+            {formatarData(resumo.fimCiclo)}) — composição do total entre OS entregues e peças
+            vendidas.
           </p>
         </div>
         <div className="flex flex-wrap items-end gap-3">

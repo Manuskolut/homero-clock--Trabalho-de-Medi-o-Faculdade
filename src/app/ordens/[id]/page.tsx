@@ -91,6 +91,7 @@ export default async function OrdemDetalhePage({
             lojaNome={ordem.loja.nome}
             clienteNome={ordem.cliente.nome}
             clienteTelefone={ordem.cliente.telefone}
+            clienteEmail={ordem.cliente.email}
             relogios={relogios}
             pecasJoia={pecasJoia}
           />

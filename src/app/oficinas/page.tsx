@@ -1,22 +1,14 @@
 import { listarOrdens } from "@/lib/actions/ordens";
 import { listarLojasSelecionaveis } from "@/lib/actions/lojas";
 import { Card } from "@/components/ui/card";
-import { StatusBadge, AtrasadaBadge } from "@/components/ui/badge";
-import { LojaBadge } from "@/components/loja-badge";
 import { LojaFiltro } from "@/components/loja-filtro";
 import { BackButton } from "@/components/ui/back-button";
 import { type OficinaDatum } from "@/components/oficina-chart";
 import { OficinaBarChart } from "@/components/oficina-bar-chart";
+import { ColunaOficina } from "@/components/coluna-oficina";
 import { OFICINA_OPTIONS } from "@/lib/validation";
-import {
-  formatarNumeroOS,
-  parseRelogiosDetalhes,
-  estaAtrasada,
-  OFICINA_COLOR_HEX,
-} from "@/lib/format";
+import { OFICINA_COLOR_HEX } from "@/lib/format";
 import { getOptionalSession } from "@/lib/dal";
-import Link from "next/link";
-import { clsx } from "clsx";
 
 export const dynamic = "force-dynamic";
 
@@ -94,70 +86,6 @@ export default async function OficinasPage({
         {colunas.map((c) => (
           <ColunaOficina key={c.value} coluna={c} isAdmin={isAdmin} className="w-full" />
         ))}
-      </div>
-    </div>
-  );
-}
-
-type ColunaData = {
-  value: string;
-  label: string;
-  ordens: Awaited<ReturnType<typeof listarOrdens>>;
-};
-
-function ColunaOficina({
-  coluna,
-  isAdmin,
-  className,
-}: {
-  coluna: ColunaData;
-  isAdmin: boolean;
-  className?: string;
-}) {
-  return (
-    <div className={clsx("flex flex-col gap-3", className)}>
-      <div className="flex items-center gap-2">
-        <span
-          className="h-2.5 w-2.5 rounded-full shrink-0"
-          style={{ backgroundColor: OFICINA_COLOR_HEX[coluna.value] }}
-        />
-        <h3 className="font-heading tracking-wide font-semibold text-ink">
-          {coluna.label} ({coluna.ordens.length})
-        </h3>
-      </div>
-
-      <div className="flex flex-col gap-2.5">
-        {coluna.ordens.length === 0 ? (
-          <p className="text-xs text-gray-light bg-white/70 border border-gray-light/30 rounded-lg px-3 py-6 text-center">
-            Nenhuma ordem
-          </p>
-        ) : (
-          coluna.ordens.map((ordem) => {
-            const atrasada = estaAtrasada(ordem.dataPrevista, ordem.status);
-            const modelos = parseRelogiosDetalhes(ordem.relogiosDetalhes)
-              .map((r) => r.modelo)
-              .join(", ");
-            return (
-              <Link
-                key={ordem.id}
-                href={`/ordens/${ordem.id}`}
-                className="rounded-lg border border-gray-light/40 bg-white p-3 flex flex-col gap-1.5 hover:border-gold-light hover:shadow-sm transition-all"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm font-heading font-semibold text-ink">
-                    #{formatarNumeroOS(ordem.numeroOS)}
-                  </span>
-                  {atrasada ? <AtrasadaBadge /> : <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />}
-                </div>
-                <div className="text-sm text-ink truncate">{ordem.cliente.nome}</div>
-                {modelos && (
-                  <div className="text-xs text-gray truncate">{modelos}</div>
-                )}
-                {isAdmin && <LojaBadge nome={ordem.loja.nome} />}
-              </Link>
-            );
-          })
-        )}
       </div>
     </div>
   );

@@ -16,6 +16,7 @@ export function OrdemEncerramento({
   lojaNome,
   clienteNome,
   clienteTelefone,
+  clienteEmail,
   relogios,
   pecasJoia,
 }: {
@@ -31,6 +32,7 @@ export function OrdemEncerramento({
   lojaNome: string;
   clienteNome: string;
   clienteTelefone: string;
+  clienteEmail: string | null;
   relogios: RelogioDetalhe[];
   pecasJoia: JoiaPeca[];
 }) {
@@ -84,6 +86,7 @@ export function OrdemEncerramento({
         lojaNome={lojaNome}
         clienteNome={clienteNome}
         clienteTelefone={clienteTelefone}
+        clienteEmail={clienteEmail}
         tipoItem={tipoItem}
         relogios={relogios}
         pecasJoia={pecasJoia}
