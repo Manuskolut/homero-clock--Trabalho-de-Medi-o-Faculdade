@@ -146,7 +146,7 @@ export function JoiasFieldArray({
 
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs text-gray-light">Tipo de conserto</span>
-                <div className="grid sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {TIPOS_CONSERTO_JOIA_OPTIONS.map((opt) => (
                     <label
                       key={opt.value}

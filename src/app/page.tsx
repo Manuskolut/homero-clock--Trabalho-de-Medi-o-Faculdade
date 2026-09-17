@@ -129,7 +129,7 @@ export default async function DashboardPage({
         />
       </div>
 
-      <div className="grid lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         <Card className="p-5 lg:col-span-2">
           <GraficoOrdensCard porStatus={porStatus} porOficina={porOficina} />
         </Card>

@@ -53,7 +53,7 @@ export default async function PecaDetalhePage({
           </div>
         )}
 
-        <dl className="grid sm:grid-cols-2 gap-4 text-sm">
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <dt className="text-xs uppercase tracking-wide text-gray">Código de barras</dt>
             <dd className="text-ink font-mono mt-0.5">{peca.codigoBarras}</dd>

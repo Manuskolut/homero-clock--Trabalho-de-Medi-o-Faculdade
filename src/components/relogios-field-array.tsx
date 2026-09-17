@@ -95,7 +95,7 @@ export function RelogiosFieldArray({
               className="rounded-lg border border-gray-light/50 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-gray-light focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold"
             />
 
-            <div className="grid sm:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="flex flex-col gap-1.5">
                 <span className="text-xs text-gray-light">Tipo do relógio</span>
                 <ChipSelect

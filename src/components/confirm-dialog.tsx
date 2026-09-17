@@ -215,7 +215,7 @@ export function EncerrarOrdemDialog({
                 )}
               </p>
 
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="valorOrcadoBaixa" className="text-sm font-medium text-ink">
                     Valor
@@ -294,7 +294,7 @@ export function EncerrarOrdemDialog({
                 />
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="nomeRetirada" className="text-sm font-medium text-ink">
                     Nome de quem retirou
@@ -372,7 +372,7 @@ export function EncerrarOrdemDialog({
                 </span>
               </div>
 
-              <dl className="grid sm:grid-cols-2 gap-3 text-sm">
+              <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-gray">Cliente</dt>
                   <dd className="text-ink mt-0.5">

@@ -279,7 +279,7 @@ export function OrdemForm({
             />
           )}
 
-          <div className="grid sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <TextField
               label={
                 (tipo === "RELOGIO" ? "Valor" : "Valor total") + " (opcional)"
@@ -304,7 +304,7 @@ export function OrdemForm({
             />
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <TextField
               label="Data de entrada"
               name="dataEntrada"

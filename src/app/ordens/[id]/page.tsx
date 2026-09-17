@@ -111,12 +111,12 @@ export default async function OrdemDetalhePage({
         </div>
       )}
 
-      <div className="grid lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="p-5 lg:col-span-2 flex flex-col gap-4">
           <h2 className="text-sm font-heading tracking-wide font-semibold text-ink">
             Detalhes do item
           </h2>
-          <dl className="grid sm:grid-cols-2 gap-4 text-sm">
+          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div>
               <dt className="text-xs uppercase tracking-wide text-gray">Tipo</dt>
               <dd className="text-ink mt-0.5">{labelTipoItem(ordem.tipoItem)}</dd>

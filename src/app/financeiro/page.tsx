@@ -60,7 +60,7 @@ export default async function FinanceiroPage({
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatCard label="Total recebido" value={formatarMoeda(resumo.totalGeral)} />
         <StatCard label="OS entregues" value={formatarMoeda(resumo.totalOrdens)} />
         <StatCard label="Peças vendidas" value={formatarMoeda(resumo.totalPecas)} />
