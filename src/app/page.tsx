@@ -92,51 +92,10 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {/* Mobile (abaixo de sm): carrossel com scroll-snap em 2 "páginas" de 2x2. */}
-      <div className="sm:hidden flex overflow-x-auto snap-x snap-mandatory -mx-4 px-4 gap-4">
-        <div className="shrink-0 w-full snap-start grid grid-cols-2 gap-4">
-          <StatCard
-            label="Em aberto"
-            value={stats.emAberto}
-            icon={<InboxIcon className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Atrasadas"
-            value={stats.atrasadas}
-            icon={<ClockAlertIcon className="h-5 w-5" />}
-          />
-          <StatCard
-            label="Próxima semana"
-            value={stats.previstasSemana}
-            icon={<CalendarIcon className="h-5 w-5" />}
-          />
-          <StatCard
-            label="OS entradas este mês"
-            value={stats.osEsteMes}
-            icon={<TrayInIcon className="h-5 w-5" />}
-          />
-        </div>
-        <div className="shrink-0 w-full snap-start grid grid-cols-2 gap-4">
-          <div className="col-start-1">
-            <StatCard
-              label="Encerradas no mês"
-              value={stats.encerradasMes}
-              icon={<CheckCircleIcon className="h-5 w-5" />}
-              href={loja ? `/financeiro?loja=${loja}` : "/financeiro"}
-            />
-          </div>
-          <div className="col-start-1">
-            <StatCard
-              label="Canceladas (mês)"
-              value={stats.semConsertoMes}
-              icon={<WrenchOffIcon className="h-5 w-5" />}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Tablet/desktop (sm+): os 6 cards juntos, sem paginação. */}
-      <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      {/* Celular: 2 colunas (3 linhas de 2). Tablet (sm+): 3 colunas.
+          Desktop (lg+): as 6 juntas numa linha só. Nunca exige rolagem
+          horizontal — só reflui em mais linhas conforme a tela encolhe. */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard
           label="Em aberto"
           value={stats.emAberto}
@@ -230,8 +189,10 @@ export default async function DashboardPage({
                     className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gold-light/10 transition-colors"
                   >
                     <div className="min-w-0">
-                      <div className="text-sm font-medium text-ink truncate flex items-center gap-2">
-                        OS #{formatarNumeroOS(ordem.numeroOS)} — {ordem.cliente.nome}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className="text-sm font-medium text-ink truncate">
+                          OS #{formatarNumeroOS(ordem.numeroOS)} — {ordem.cliente.nome}
+                        </span>
                         {isAdmin && <LojaBadge nome={ordem.loja.nome} />}
                       </div>
                       <div className="text-xs text-gray truncate">

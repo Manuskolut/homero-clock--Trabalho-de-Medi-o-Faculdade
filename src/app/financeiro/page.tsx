@@ -106,8 +106,10 @@ export default async function FinanceiroPage({
                 className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gold-light/10 transition-colors"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-ink truncate flex items-center gap-2">
-                    OS #{formatarNumeroOS(ordem.numeroOS)} — {ordem.cliente.nome}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-ink truncate">
+                      OS #{formatarNumeroOS(ordem.numeroOS)} — {ordem.cliente.nome}
+                    </span>
                     {isAdmin && <LojaBadge nome={ordem.loja.nome} />}
                   </div>
                   <div className="text-xs text-gray truncate">
@@ -141,8 +143,8 @@ export default async function FinanceiroPage({
                 className="flex items-center justify-between gap-3 px-5 py-3"
               >
                 <div className="min-w-0">
-                  <div className="text-sm font-medium text-ink truncate flex items-center gap-2">
-                    {peca.nome}
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-medium text-ink truncate">{peca.nome}</span>
                     {isAdmin && peca.lojaVenda && <LojaBadge nome={peca.lojaVenda.nome} />}
                   </div>
                   <div className="text-xs text-gray truncate">

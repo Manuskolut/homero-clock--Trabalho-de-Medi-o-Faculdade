@@ -46,7 +46,7 @@ export function PecaCard({
       )}
 
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 min-w-0">
           <span className="font-medium text-ink truncate">{peca.nome}</span>
           <PecaStatusBadge status={peca.status} />
         </div>

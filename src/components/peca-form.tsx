@@ -166,15 +166,15 @@ export function PecaForm({
             <label htmlFor="foto" className="text-sm font-medium text-ink">
               Foto (opcional)
             </label>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 min-w-0">
               <label
                 htmlFor="foto"
-                className="cursor-pointer rounded-md bg-gold px-3 py-1.5 text-sm font-medium text-white transition-colors"
+                className="shrink-0 cursor-pointer rounded-md bg-gold px-3 py-1.5 text-sm font-medium text-white transition-colors"
               >
                 <span className="sm:hidden">Abrir câmera</span>
                 <span className="hidden sm:inline">Escolher arquivo</span>
               </label>
-              <span className="text-sm text-gray truncate">
+              <span className="text-sm text-gray truncate min-w-0">
                 {fotoProcessando
                   ? "Otimizando foto…"
                   : (fotoNome ?? "Nenhum arquivo selecionado")}

@@ -35,6 +35,16 @@ body {
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
 
+/* Rede de segurança contra rolagem horizontal acidental em telas de
+   celular — nenhuma tela deve exigir rolagem horizontal na largura da
+   página inteira. Elementos com sua própria rolagem horizontal
+   intencional (ex: carrossel de cards do Painel, tabelas com
+   overflow-x-auto) continuam rolando normalmente, pois isso só afeta o
+   elemento raiz. */
+html {
+  overflow-x: hidden;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
