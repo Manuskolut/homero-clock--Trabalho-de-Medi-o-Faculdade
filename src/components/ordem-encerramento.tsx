@@ -22,7 +22,7 @@ export function OrdemEncerramento({
   id: string;
   /** true quando a ordem já passou pela baixa formal (dataRetirada preenchida). */
   finalizada: boolean;
-  /** Status atual — só usado para ajustar o texto do diálogo (Sem conserto x Entregue). */
+  /** Status atual — só usado para ajustar o texto do diálogo (Cancelada x Entregue). */
   statusAtual: string;
   tipoItem: "RELOGIO" | "JOIA";
   valorOrcado: number | null;
@@ -61,7 +61,7 @@ export function OrdemEncerramento({
           ehSemConserto ? (
             <>
               O cliente está retirando o item da loja. Como esta ordem já está
-              marcada como <strong>Sem conserto</strong>, ela permanecerá com esse
+              marcada como <strong>Cancelada</strong>, ela permanecerá com esse
               status — só passará a ser somente leitura, e os dados do item e as
               datas não poderão mais ser editados.
             </>
@@ -70,9 +70,9 @@ export function OrdemEncerramento({
         textoConfirmacao={
           ehSemConserto ? (
             <>
-              Confirmo que o item está sendo retirado sem conserto e que desejo
-              registrar a baixa desta ordem. Esta ação não poderá ser desfeita
-              facilmente.
+              Confirmo que o item está sendo retirado como cancelado e que
+              desejo registrar a baixa desta ordem. Esta ação não poderá ser
+              desfeita facilmente.
             </>
           ) : undefined
         }

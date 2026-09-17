@@ -92,19 +92,25 @@ function Papel({
 
 // Cabeçalho compartilhado pelas duas vias: logo da loja centralizada, depois
 // nome da loja (esquerda) e número da OS (direita) na mesma linha. A via da
-// loja ainda soma o aviso "URGENTE" com espaço em branco pra anotação manual
-// de data quando o caso exigir urgência (sem ligação com dados do sistema).
+// loja ainda soma o aviso "URGENTE": espaço em branco pra anotação manual de
+// data quando o prazo foi calculado automaticamente (sem ligação com dados
+// do sistema), ou a própria data prometida (só o valor, sem rótulo) quando
+// ela foi definida manualmente na OS — nesse caso a linha "Data prometida"
+// mais abaixo some, pra não duplicar a mesma data.
 function CabecalhoVia({
   numeroOS,
   lojaNome,
   rotulo,
   mostrarUrgente = false,
+  dataUrgenteManual,
   lojaNomeClassName = "text-sm",
 }: {
   numeroOS: number;
   lojaNome: string;
   rotulo: string;
   mostrarUrgente?: boolean;
+  /** Data prometida já formatada, só quando ela foi definida manualmente — substitui o espaço em branco dentro da caixa "Urgente". */
+  dataUrgenteManual?: string;
   /** Via da Loja usa uma fonte 18% maior no nome da loja do que a Via do Cliente. */
   lojaNomeClassName?: string;
 }) {
@@ -124,7 +130,11 @@ function CabecalhoVia({
         <div className="w-full flex justify-end mt-2">
           <div className="flex flex-col items-end gap-1">
             <span className="text-[15px] font-bold uppercase">Urgente</span>
-            <EspacoManual />
+            {dataUrgenteManual ? (
+              <span className="text-[15px] font-bold">{dataUrgenteManual}</span>
+            ) : (
+              <EspacoManual />
+            )}
           </div>
         </div>
       )}
@@ -267,7 +277,10 @@ export function ViaLoja(dados: DadosVia & { captura?: boolean }) {
         numeroOS={dados.numeroOS}
         lojaNome={dados.lojaNome}
         rotulo="Via Loja"
-        mostrarUrgente={!dados.dataPrometidaManual}
+        mostrarUrgente
+        dataUrgenteManual={
+          dados.dataPrometidaManual ? formatarData(dados.dataPrevista) : undefined
+        }
         lojaNomeClassName="text-[16.52px]"
       />
       <Separador />
@@ -317,11 +330,13 @@ export function ViaLoja(dados: DadosVia & { captura?: boolean }) {
         />
       )}
       <Linha label="Data de entrada" valor={formatarData(dados.dataEntrada)} captura={captura} />
-      <Linha
-        label="Data prometida"
-        valor={formatarData(dados.dataPrevista)}
-        captura={captura}
-      />
+      {!dados.dataPrometidaManual && (
+        <Linha
+          label="Data prometida"
+          valor={formatarData(dados.dataPrevista)}
+          captura={captura}
+        />
+      )}
       {dados.nomeAtendente && (
         <Linha
           label="Atendente"

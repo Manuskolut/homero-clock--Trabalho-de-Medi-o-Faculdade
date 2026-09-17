@@ -286,11 +286,27 @@ export function corStatusInline(status: string, tipoItem?: string): { bg: string
   return { bg, text: "#ffffff" };
 }
 
+// Status extras que só o Painel exclui do cálculo de "atrasada" — repassado
+// a estaAtrasada e usado direto na query de contagem (ver
+// estatisticasDashboard). "Pronto para retirada" não conta: se a OS já
+// chegou nesse status, o problema deixou de ser o prazo de execução e
+// passou a ser o cliente não ter retirado ainda.
+export const PAINEL_STATUS_EXCLUIDOS_ATRASADA = ["PRONTO_RETIRADA"] as const;
+
+// statusExtrasNaoAtrasados permite excluir status adicionais do cálculo sem
+// afetar quem chama sem esse argumento (usado hoje só pelo Painel).
 export function estaAtrasada(
   dataPrevista: Date | string | null | undefined,
-  status: string
+  status: string,
+  statusExtrasNaoAtrasados: readonly string[] = []
 ): boolean {
-  if (status === "ENTREGUE" || status === "SEM_CONSERTO" || !dataPrevista) return false;
+  if (
+    status === "ENTREGUE" ||
+    status === "SEM_CONSERTO" ||
+    statusExtrasNaoAtrasados.includes(status) ||
+    !dataPrevista
+  )
+    return false;
   const hoje = new Date();
   hoje.setHours(0, 0, 0, 0);
   const d = typeof dataPrevista === "string" ? new Date(dataPrevista) : dataPrevista;

@@ -16,7 +16,7 @@ const CATEGORIAS_GRAFICO = [
   { value: "EM_CONSERTO_RELOGIO", label: "Em conserto (Relógio)" },
   { value: "EM_CONSERTO_JOIA", label: "Em conserto (Joia)" },
   { value: "PRONTO_RETIRADA", label: "Pronto para retirada" },
-  { value: "SEM_CONSERTO", label: "Sem conserto" },
+  { value: "SEM_CONSERTO", label: "Cancelada" },
   { value: "ENTREGUE", label: "Entregue / Encerrado" },
 ];
 

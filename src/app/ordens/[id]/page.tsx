@@ -104,7 +104,7 @@ export default async function OrdemDetalhePage({
         <div className="rounded-lg border border-gray-light/50 bg-gray-light/10 px-4 py-3 text-sm text-gray flex items-center gap-2">
           <span className="h-1.5 w-1.5 rounded-full bg-gray shrink-0" />
           {ordem.status === "SEM_CONSERTO"
-            ? "Esta ordem foi marcada como sem conserto e está em modo somente leitura."
+            ? "Esta ordem foi marcada como cancelada e está em modo somente leitura."
             : "Esta ordem foi entregue e está em modo somente leitura."}{" "}
           Para alterar dados, reabra a ordem primeiro.
         </div>

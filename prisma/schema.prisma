@@ -103,10 +103,11 @@ model Ordem {
   nomeAtendente String @default("")
   // true quando o atendente digitou a data prometida na criação; false
   // quando ficou em branco e foi calculada automaticamente (+PRAZO_PADRAO_DIAS).
-  // Controla se o campo "Urgente" aparece na Via da Loja (só aparece quando
-  // false, ou seja, quando o prazo foi o automático). Recalculado a cada
+  // Controla o conteúdo do campo "Urgente" na Via da Loja: quando true, a
+  // caixa mostra a própria data prometida (em vez do espaço em branco pra
+  // anotação manual usado quando o prazo é automático). Recalculado a cada
   // edição da OS. OSs criadas antes deste campo existir ficam com false
-  // (mesmo comportamento visual que já tinham: "Urgente" sempre aparecia).
+  // (mesmo comportamento visual que já tinham: espaço em branco).
   dataPrometidaManual Boolean @default(false)
 
   // Específico do fluxo Relógio — lista de até 6 relógios, cada um com seus

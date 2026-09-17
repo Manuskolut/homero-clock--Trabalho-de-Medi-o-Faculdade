@@ -13,7 +13,7 @@ import { redirect } from "next/navigation";
 import { Prisma, type StatusOrdem, type TipoItem } from "@prisma/client";
 import type { ActionState } from "@/lib/actions/clientes";
 import { verifySession, resolverLojaAlvo, temAcesso, filtroLoja, requireAdmin } from "@/lib/dal";
-import { estaAtrasada } from "@/lib/format";
+import { estaAtrasada, PAINEL_STATUS_EXCLUIDOS_ATRASADA } from "@/lib/format";
 import { enviarEmailEntradaOrdem, enviarEmailBaixaOrdem } from "@/lib/email";
 
 // Prazo padrão de entrega quando o atendente não informa data prometida
@@ -664,12 +664,16 @@ export async function estatisticasDashboard(lojaIdFiltro?: string) {
       where: { deletedAt: null, ...lojaWhere, dataRetirada: null },
     }),
     // Atrasadas continua por status: "Sem conserto" nunca conta como
-    // atrasada (mesmo critério de estaAtrasada), aberta ou não.
+    // atrasada (mesmo critério de estaAtrasada), aberta ou não. "Pronto para
+    // retirada" também fica de fora: se já chegou nesse status, o problema
+    // deixou de ser o prazo de execução e passou a ser o cliente não ter
+    // retirado — essa OS conta/aparece como "Pronto para retirada", não
+    // como atrasada (ver PAINEL_STATUS_EXCLUIDOS_ATRASADA).
     prisma.ordem.count({
       where: {
         deletedAt: null,
         ...lojaWhere,
-        status: { notIn: ["ENTREGUE", "SEM_CONSERTO"] },
+        status: { notIn: ["ENTREGUE", "SEM_CONSERTO", ...PAINEL_STATUS_EXCLUIDOS_ATRASADA] },
         dataPrevista: { lt: hoje },
       },
     }),
@@ -732,7 +736,7 @@ export async function estatisticasDashboard(lojaIdFiltro?: string) {
   // de uma só — ver StatusChart.
   const contagemPorStatus = new Map<string, number>();
   for (const o of ordensParaStatus) {
-    const chave = estaAtrasada(o.dataPrevista, o.status)
+    const chave = estaAtrasada(o.dataPrevista, o.status, PAINEL_STATUS_EXCLUIDOS_ATRASADA)
       ? "ATRASADAS"
       : o.status === "EM_CONSERTO"
         ? `EM_CONSERTO_${o.tipoItem}`

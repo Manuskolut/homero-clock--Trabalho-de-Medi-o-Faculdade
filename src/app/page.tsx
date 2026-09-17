@@ -17,7 +17,13 @@ import { GraficoOrdensCard } from "@/components/grafico-ordens-card";
 import { StatusBadge, AtrasadaBadge } from "@/components/ui/badge";
 import { LojaBadge } from "@/components/loja-badge";
 import { LojaFiltro } from "@/components/loja-filtro";
-import { formatarData, formatarNumeroOS, estaAtrasada } from "@/lib/format";
+import {
+  formatarData,
+  formatarNumeroOS,
+  estaAtrasada,
+  diasParaPrazo,
+  PAINEL_STATUS_EXCLUIDOS_ATRASADA,
+} from "@/lib/format";
 import { LinkButton } from "@/components/ui/button";
 import { getOptionalSession } from "@/lib/dal";
 import Link from "next/link";
@@ -116,11 +122,12 @@ export default async function DashboardPage({
               label="Encerradas no mês"
               value={stats.encerradasMes}
               icon={<CheckCircleIcon className="h-5 w-5" />}
+              href={loja ? `/financeiro?loja=${loja}` : "/financeiro"}
             />
           </div>
           <div className="col-start-1">
             <StatCard
-              label="Sem conserto (mês)"
+              label="Canceladas (mês)"
               value={stats.semConsertoMes}
               icon={<WrenchOffIcon className="h-5 w-5" />}
             />
@@ -154,9 +161,10 @@ export default async function DashboardPage({
           label="Encerradas no mês"
           value={stats.encerradasMes}
           icon={<CheckCircleIcon className="h-5 w-5" />}
+          href={loja ? `/financeiro?loja=${loja}` : "/financeiro"}
         />
         <StatCard
-          label="Sem conserto (mês)"
+          label="Canceladas (mês)"
           value={stats.semConsertoMes}
           icon={<WrenchOffIcon className="h-5 w-5" />}
         />
@@ -207,33 +215,47 @@ export default async function DashboardPage({
             </p>
           ) : (
             <div className="flex flex-col divide-y divide-gold-light/30 -mx-5">
-              {proximas.slice(0, 6).map((ordem) => (
-                <Link
-                  key={ordem.id}
-                  href={`/ordens/${ordem.id}`}
-                  className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gold-light/10 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-ink truncate flex items-center gap-2">
-                      OS #{formatarNumeroOS(ordem.numeroOS)} — {ordem.cliente.nome}
-                      {isAdmin && <LojaBadge nome={ordem.loja.nome} />}
+              {proximas.slice(0, 6).map((ordem) => {
+                const atrasada = estaAtrasada(
+                  ordem.dataPrevista,
+                  ordem.status,
+                  PAINEL_STATUS_EXCLUIDOS_ATRASADA
+                );
+                const diasVencido = -diasParaPrazo(ordem.dataPrevista);
+                const prontoVencido = ordem.status === "PRONTO_RETIRADA" && diasVencido > 0;
+                return (
+                  <Link
+                    key={ordem.id}
+                    href={`/ordens/${ordem.id}`}
+                    className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-gold-light/10 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-medium text-ink truncate flex items-center gap-2">
+                        OS #{formatarNumeroOS(ordem.numeroOS)} — {ordem.cliente.nome}
+                        {isAdmin && <LojaBadge nome={ordem.loja.nome} />}
+                      </div>
+                      <div className="text-xs text-gray truncate">
+                        {ordem.descricaoItem}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray truncate">
-                      {ordem.descricaoItem}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {atrasada ? (
+                        <AtrasadaBadge />
+                      ) : (
+                        <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />
+                      )}
+                      {prontoVencido && (
+                        <span className="text-xs text-[#E31717]">
+                          Prazo vencido há {diasVencido} dia{diasVencido === 1 ? "" : "s"}
+                        </span>
+                      )}
+                      <span className="text-xs text-gray-light">
+                        {formatarData(ordem.dataPrevista)}
+                      </span>
                     </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {estaAtrasada(ordem.dataPrevista, ordem.status) ? (
-                      <AtrasadaBadge />
-                    ) : (
-                      <StatusBadge status={ordem.status} tipoItem={ordem.tipoItem} />
-                    )}
-                    <span className="text-xs text-gray-light">
-                      {formatarData(ordem.dataPrevista)}
-                    </span>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </Card>

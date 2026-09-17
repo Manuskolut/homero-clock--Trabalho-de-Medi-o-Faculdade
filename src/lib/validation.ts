@@ -34,7 +34,7 @@ export const STATUS_ORDEM_OPTIONS = [
   { value: "EM_ANALISE", label: "Em orçamento" },
   { value: "EM_CONSERTO", label: "Em conserto" },
   { value: "PRONTO_RETIRADA", label: "Pronto para retirada" },
-  { value: "SEM_CONSERTO", label: "Sem conserto" },
+  { value: "SEM_CONSERTO", label: "Cancelada" },
   { value: "ENTREGUE", label: "Entregue / Encerrado" },
 ] as const;
 

@@ -1,5 +1,6 @@
 import { clsx } from "clsx";
 import type { ReactNode } from "react";
+import Link from "next/link";
 
 export function Card({
   children,
@@ -25,14 +26,17 @@ export function StatCard({
   value,
   hint,
   icon,
+  href,
 }: {
   label: string;
   value: string | number;
   hint?: string;
   icon?: ReactNode;
+  /** Quando presente, o card inteiro vira um link (ex: detalhamento financeiro). */
+  href?: string;
 }) {
-  return (
-    <Card className="p-5 flex flex-col gap-1 !border-gold relative overflow-hidden">
+  const conteudo = (
+    <>
       {icon && (
         <span className="absolute top-3.5 right-3.5 flex h-9 w-9 items-center justify-center rounded-full bg-gold-light/25 text-gold">
           {icon}
@@ -45,6 +49,21 @@ export function StatCard({
         {value}
       </span>
       {hint && <span className="text-xs text-gray-light">{hint}</span>}
-    </Card>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="block bg-white/70 border border-gold p-5 flex flex-col gap-1 rounded-xl shadow-md shadow-ink/5 transition-shadow relative overflow-hidden hover:shadow-lg hover:bg-gold-light/10"
+      >
+        {conteudo}
+      </Link>
+    );
+  }
+
+  return (
+    <Card className="p-5 flex flex-col gap-1 !border-gold relative overflow-hidden">{conteudo}</Card>
   );
 }
