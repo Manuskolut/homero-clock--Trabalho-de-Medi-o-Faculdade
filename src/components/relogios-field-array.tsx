@@ -4,6 +4,7 @@ import { useState } from "react";
 import {
   MAX_RELOGIOS_POR_ORDEM,
   TIPO_RELOGIO_OPTIONS,
+  TIPO_RELOGIO_SEM_PULSEIRA,
   PULSEIRA_OPTIONS,
   ESTADO_PECA_OPTIONS,
 } from "@/lib/validation";
@@ -56,6 +57,10 @@ export function RelogiosFieldArray({
     setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, descricao: valor } : l)));
   }
 
+  function atualizarTipo(id: string, valor: string) {
+    setLinhas((prev) => prev.map((l) => (l.id === id ? { ...l, tipo: valor } : l)));
+  }
+
   const atingiuLimite = linhas.length >= MAX_RELOGIOS_POR_ORDEM;
 
   return (
@@ -66,7 +71,9 @@ export function RelogiosFieldArray({
       </label>
 
       <div className="flex flex-col gap-4">
-        {linhas.map((linha, i) => (
+        {linhas.map((linha, i) => {
+          const semPulseira = linha.tipo === TIPO_RELOGIO_SEM_PULSEIRA;
+          return (
           <div
             key={linha.id}
             className="rounded-xl border border-gray-light/40 bg-white p-4 flex flex-col gap-3"
@@ -95,21 +102,32 @@ export function RelogiosFieldArray({
               className="rounded-lg border border-gray-light/50 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-gray-light focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold"
             />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs text-gray-light">Tipo do relógio</span>
+                <span className="text-xs text-gray-light">
+                  Tipo do relógio
+                  <span className="text-gold ml-0.5">*</span>
+                </span>
                 <ChipSelect
                   name="tipoRelogio"
                   options={TIPO_RELOGIO_OPTIONS}
                   defaultValue={linha.tipo}
+                  onChange={(valor) => atualizarTipo(linha.id, valor)}
+                  nowrap
                 />
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="text-xs text-gray-light">Apresentação (pulseira)</span>
+                <span className="text-xs text-gray-light">
+                  Apresentação (pulseira)
+                  {semPulseira && <span className="text-gray-light"> — não se aplica</span>}
+                </span>
                 <ChipSelect
+                  key={`pulseira-${linha.id}-${semPulseira}`}
                   name="pulseiraRelogio"
                   options={PULSEIRA_OPTIONS}
-                  defaultValue={linha.pulseira}
+                  defaultValue={semPulseira ? "" : linha.pulseira}
+                  disabled={semPulseira}
+                  nowrap
                 />
               </div>
             </div>
@@ -120,23 +138,34 @@ export function RelogiosFieldArray({
                 <span className="text-gold ml-0.5">*</span>
               </span>
               <div className="flex flex-col gap-2">
-                {PECAS_ESTADO.map(({ campo, label, Icone }) => (
-                  <div
-                    key={campo}
-                    className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap"
-                  >
-                    <span className="flex items-center gap-2 text-sm text-ink w-28 shrink-0">
-                      <Icone className="h-4 w-4 text-gold shrink-0" />
-                      {label}
-                    </span>
-                    <ChipSelect
-                      name={`${campo}Relogio`}
-                      options={ESTADO_PECA_OPTIONS}
-                      defaultValue={linha[campo]}
-                      colorMap={ESTADO_PECA_COLOR_HEX}
-                    />
-                  </div>
-                ))}
+                {PECAS_ESTADO.map(({ campo, label, Icone }) => {
+                  const opcional = semPulseira && campo === "estadoPulseira";
+                  return (
+                    <div
+                      key={campo}
+                      className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap"
+                    >
+                      <span className="flex items-center gap-2 text-sm text-ink w-28 shrink-0">
+                        <Icone className="h-4 w-4 text-gold shrink-0" />
+                        {label}
+                      </span>
+                      {opcional ? (
+                        <span className="text-xs text-gray-light">Não se aplica</span>
+                      ) : (
+                        <ChipSelect
+                          key={`${campo}-${linha.id}`}
+                          name={`${campo}Relogio`}
+                          options={ESTADO_PECA_OPTIONS}
+                          defaultValue={linha[campo]}
+                          colorMap={ESTADO_PECA_COLOR_HEX}
+                        />
+                      )}
+                      {opcional && (
+                        <input type="hidden" name={`${campo}Relogio`} value="" />
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -155,7 +184,8 @@ export function RelogiosFieldArray({
               />
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {atingiuLimite ? (

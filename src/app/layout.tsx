@@ -3,6 +3,7 @@ import { Inter, Playfair_Display, Antonio, Barlow_Condensed } from "next/font/go
 import "./globals.css";
 import Header from "@/components/header";
 import { SiteFooter } from "@/components/site-footer";
+import { NumericWheelGuard } from "@/components/numeric-wheel-guard";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -46,6 +47,7 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} ${antonio.variable} ${barlowCondensed.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-cream text-ink">
+        <NumericWheelGuard />
         <Header />
         <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex flex-col print:p-0 print:max-w-none">
           {children}

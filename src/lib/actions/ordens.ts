@@ -13,7 +13,7 @@ import { redirect } from "next/navigation";
 import { Prisma, type StatusOrdem, type TipoItem } from "@prisma/client";
 import type { ActionState } from "@/lib/actions/clientes";
 import { verifySession, resolverLojaAlvo, temAcesso, filtroLoja, requireAdmin } from "@/lib/dal";
-import { estaAtrasada, PAINEL_STATUS_EXCLUIDOS_ATRASADA } from "@/lib/format";
+import { estaAtrasada, PAINEL_STATUS_EXCLUIDOS_ATRASADA, formatarNumeroOS } from "@/lib/format";
 import { enviarEmailEntradaOrdem, enviarEmailBaixaOrdem } from "@/lib/email";
 
 // Prazo padrão de entrega quando o atendente não informa data prometida
@@ -530,6 +530,30 @@ export type FiltroOrdens = {
   lojaId?: string;
 };
 
+type OrdemComCliente = Prisma.OrdemGetPayload<{ include: { cliente: true; loja: true } }>;
+
+// Prioridade de relevância pra busca por termo (menor = mais relevante):
+// 0) número da OS igual ao termo; 1) número da OS que começa com o termo;
+// 2) nome do cliente que começa com o termo; 3) qualquer outro campo que
+// contenha o termo em qualquer posição (comportamento antigo, rebaixado).
+// Retorna null quando a ordem não corresponde ao termo (deve ser descartada).
+function pontuarRelevanciaBusca(ordem: OrdemComCliente, termo: string): number | null {
+  const termoLower = termo.toLowerCase();
+  const numeroBusca = /^\d+$/.test(termo) ? Number(termo) : null;
+  const labelOS = formatarNumeroOS(ordem.numeroOS);
+  const nomeLower = ordem.cliente.nome.toLowerCase();
+
+  if (numeroBusca !== null && ordem.numeroOS === numeroBusca) return 0;
+  if (numeroBusca !== null && labelOS.startsWith(termo)) return 1;
+  if (nomeLower.startsWith(termoLower)) return 2;
+
+  const apareceEmOutroCampo =
+    ordem.descricaoItem.toLowerCase().includes(termoLower) ||
+    nomeLower.includes(termoLower) ||
+    ordem.cliente.telefone.includes(termo);
+  return apareceEmOutroCampo ? 3 : null;
+}
+
 export async function listarOrdens(filtro: FiltroOrdens = {}) {
   const session = await verifySession();
   const where: Prisma.OrdemWhereInput = { deletedAt: null };
@@ -549,17 +573,6 @@ export async function listarOrdens(filtro: FiltroOrdens = {}) {
     where.tipoItem = filtro.tipoItem;
   }
 
-  if (filtro.termo && filtro.termo.trim()) {
-    const q = filtro.termo.trim();
-    const numeroBusca = /^\d+$/.test(q) ? Number(q) : null;
-    where.OR = [
-      ...(numeroBusca !== null ? [{ numeroOS: numeroBusca }] : []),
-      { descricaoItem: { contains: q } },
-      { cliente: { nome: { contains: q } } },
-      { cliente: { telefone: { contains: q } } },
-    ];
-  }
-
   if (filtro.de || filtro.ate) {
     where.dataPrevista = {
       ...(filtro.de ? { gte: new Date(filtro.de) } : {}),
@@ -567,11 +580,31 @@ export async function listarOrdens(filtro: FiltroOrdens = {}) {
     };
   }
 
-  return prisma.ordem.findMany({
+  const termo = filtro.termo?.trim();
+  if (!termo) {
+    return prisma.ordem.findMany({
+      where,
+      include: { cliente: true, loja: true },
+      orderBy: { dataEntrada: "desc" },
+    });
+  }
+
+  // A prioridade de relevância (nº da OS > nome do cliente > outros campos)
+  // não dá pra expressar num orderBy do Prisma, então filtra pelo restante
+  // dos critérios no banco e pontua/ordena em memória.
+  const candidatas = await prisma.ordem.findMany({
     where,
     include: { cliente: true, loja: true },
-    orderBy: { dataEntrada: "desc" },
   });
+
+  return candidatas
+    .map((ordem) => ({ ordem, pontuacao: pontuarRelevanciaBusca(ordem, termo) }))
+    .filter((r): r is { ordem: OrdemComCliente; pontuacao: number } => r.pontuacao !== null)
+    .sort((a, b) => {
+      if (a.pontuacao !== b.pontuacao) return a.pontuacao - b.pontuacao;
+      return b.ordem.dataEntrada.getTime() - a.ordem.dataEntrada.getTime();
+    })
+    .map((r) => r.ordem);
 }
 
 export async function obterOrdemComCliente(id: string) {

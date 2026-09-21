@@ -83,7 +83,12 @@ export const TIPO_RELOGIO_OPTIONS = [
   { value: "AUTOMATICO", label: "Automático" },
   { value: "CORDA", label: "Corda" },
   { value: "ANA_DIGI", label: "Ana-digi" },
+  { value: "PAREDE_MESA", label: "Parede/Mesa" },
 ] as const;
+
+// Relógios de parede/mesa não têm pulseira — o estado dela deixa de ser
+// obrigatório só para esse tipo (os demais estados continuam exigidos).
+export const TIPO_RELOGIO_SEM_PULSEIRA = "PAREDE_MESA";
 
 export const PULSEIRA_OPTIONS = [
   { value: "COURO", label: "Couro" },
@@ -115,18 +120,29 @@ export const TAMANHO_ARO_OPTIONS = Array.from({ length: 26 }, (_, i) => {
 // Tipo de conserto que exige informar o tamanho do aro da peça.
 export const TIPO_CONSERTO_COM_ARO = "AJUSTE_TAMANHO";
 
-export const relogioDetalheSchema = z.object({
-  modelo: z.string().trim().min(1, "Informe o modelo do relógio"),
-  descricao: z.string().trim().min(3, "Descreva o serviço deste relógio"),
-  tipo: z.string().trim().optional(),
-  pulseira: z.string().trim().optional(),
-  // Obrigatórios só a partir de agora — OS antigas salvas sem esses campos
-  // continuam abrindo normalmente (validação só entra na criação/edição).
-  estadoCaixa: z.string().trim().min(1, "Informe o estado da caixa"),
-  estadoPulseira: z.string().trim().min(1, "Informe o estado da pulseira"),
-  estadoVidro: z.string().trim().min(1, "Informe o estado do vidro"),
-  estadoMostrador: z.string().trim().min(1, "Informe o estado do mostrador"),
-});
+export const relogioDetalheSchema = z
+  .object({
+    modelo: z.string().trim().min(1, "Informe o modelo do relógio"),
+    descricao: z.string().trim().min(3, "Descreva o serviço deste relógio"),
+    tipo: z
+      .string()
+      .optional()
+      .refine((v) => !!v?.trim(), { message: "Selecione o tipo do relógio" }),
+    pulseira: z.string().trim().optional(),
+    // Obrigatórios só a partir de agora — OS antigas salvas sem esses campos
+    // continuam abrindo normalmente (validação só entra na criação/edição).
+    estadoCaixa: z.string().trim().min(1, "Informe o estado da caixa"),
+    estadoPulseira: z.string().trim().optional(),
+    estadoVidro: z.string().trim().min(1, "Informe o estado do vidro"),
+    estadoMostrador: z.string().trim().min(1, "Informe o estado do mostrador"),
+  })
+  .refine(
+    (data) => data.tipo === TIPO_RELOGIO_SEM_PULSEIRA || !!data.estadoPulseira,
+    {
+      message: "Informe o estado da pulseira",
+      path: ["estadoPulseira"],
+    }
+  );
 
 export const joiaPecaSchema = z.object({
   descricao: z.string().trim().min(1, "Descreva a peça"),
